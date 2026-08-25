@@ -58,11 +58,6 @@ function Refresh {
     git pull origin $BRANCH
 }
 
-function Publish {
-    Website
-    .\publish.bash
-}
-
 function Clean {
     Remove-Item -Force *.bak -ErrorAction SilentlyContinue
     if (Test-Path dist) { Remove-Item -Recurse -Force dist }
@@ -105,7 +100,6 @@ switch ($args[0]) {
     "status" { Status }
     "save" { Save $args[1] }
     "refresh" { Refresh }
-    "publish" { Publish }
     "clean" { Clean }
     "dist" { Dist }
     "release" { Release }
