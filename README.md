@@ -30,7 +30,7 @@ The following are the components currently provided.
 - status: wip
 - released: 2026-01-28
 
-This release adds a new &#x60;&lt;card-layout&gt;&#x60; component for displaying three-card layouts with images, titles, descriptions, and links. The component is responsive and uses attributes to set the content values.
+This release adds a new `<card-layout>` component for displaying three-card layouts with images, titles, descriptions, and links. The component is responsive and uses attributes to set the content values.
 
 
 ### Authors
@@ -47,17 +47,16 @@ This release adds a new &#x60;&lt;card-layout&gt;&#x60; component for displaying
 
 ## Software Requirements
 
-- Deno &gt;&#x3D; 2.4.3 (for bundling dependencies)
+- Deno >= 2.7 (for bundling dependencies)
 
 ### Software Suggestions
 
-- CMTools &gt;&#x3D; 0.0.40
-- Pandoc &gt;&#x3D; 3.1
-- PageFind &gt;&#x3D; 1.3
+- CMTools >= 0.0.43
+- Pandoc >= 3.9
 
 #### Runtime platform
 
-HTML5-compatible web browser**
+**HTML5-compatible web browser**
 
 ## Related resources
 
