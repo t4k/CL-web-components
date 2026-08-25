@@ -53,6 +53,7 @@ jobs:
             --exclude '.vscode' \
             --exclude 'dist' \
             --exclude 'test' \
+            --exclude 'llm_notes' \
             --exclude 'pagefind'
 
       - name: Build Pagefind search index

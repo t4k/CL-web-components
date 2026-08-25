@@ -27,6 +27,6 @@ pagefind: .FORCE
 	git add pagefind
 
 clean:
-	@rm *.html
+	@rm -f $(HTML_PAGES) index.html
 
 .FORCE:

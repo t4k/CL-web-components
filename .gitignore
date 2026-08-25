@@ -9,6 +9,15 @@ bin/
 dist/
 scratch/
 
+# Generated documentation
+# Pandoc output from `make website`. The site is built and deployed by
+# .github/workflows/docs.yml, so this output is never committed.
+# Hand-written demo and test pages are kept.
+/*.html
+!/demo_*.html
+!/textarea-agent-list-test.html
+!/textarea-csv_test.html
+
 # macOS system files
 .DS_Store
 

@@ -40,6 +40,12 @@ This converts all `*.md` files to `*.html` using **Pandoc** so you can open them
 in a browser before pushing. It is only a preview -- the published site is built
 from scratch by CI, not from these files.
 
+The generated `*.html` files are gitignored, so there is nothing to commit or
+clean up afterwards. `make -f website.mak clean` removes them.
+
+Note that `llm_notes/` holds developer reference material and is excluded from
+the published site.
+
 ## Step 2. Save and push your working branch
 
 If you added **new files**, stage them first:
