@@ -36,22 +36,25 @@ no publishing script to run.
 make website
 ```
 
-This assembles the complete site into `docs/`: Pandoc converts every `*.md`
-file to HTML, the hand-written demo pages and runtime assets are copied in, and
-the Pagefind search index is rebuilt. Serve it to preview:
+This assembles the complete site into `_site/`: Pandoc renders every `docs/*.md`
+page plus the cmt-generated Markdown at the repository root, the demo pages and
+runtime assets are copied in, and the Pagefind search index is rebuilt. Serve it
+to preview:
 
 ```bash
-python3 -m http.server -d docs
+python3 -m http.server -d _site
 ```
 
-CI runs this same target and uploads `docs/` verbatim, so what you see locally
+CI runs this same target and uploads `_site/` verbatim, so what you see locally
 is what gets published.
 
-`docs/` is gitignored, so there is nothing to commit or clean up afterwards.
+`_site/` is gitignored, so there is nothing to commit or clean up afterwards.
 `make -f website.mak clean` removes it.
 
-Only what `make website` copies into `docs/` is served. The Markdown sources,
-build scripts and `llm_notes/` stay in the repository but are not published.
+Documentation sources live in `docs/`. The generated files `cmt` writes to the
+repository root -- `README.md`, `about.md`, `INSTALL.md` and the `INSTALL_NOTES`
+pages -- are rendered from there, because `cmt` can only write to the root.
+Build scripts and `llm_notes/` stay in the repository but are not published.
 
 ## Step 2. Save and push your working branch
 

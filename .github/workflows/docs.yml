@@ -1,7 +1,8 @@
 name: Build and deploy docs
 
-# `make website` assembles the whole published site into docs/ -- Pandoc
-# output, hand-written demo pages, runtime assets and the Pagefind index.
+# `make website` assembles the whole published site into _site/ -- Pandoc
+# output from docs/*.md and ./*.md, hand-written demo pages, runtime assets
+# and the Pagefind index.
 # This uploads that directory straight to GitHub Pages: no `gh-pages`
 # branch, no `publish.bash`, no merge prompt.
 #
@@ -53,7 +54,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: docs
+          path: _site
 
   deploy:
     needs: build
