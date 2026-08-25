@@ -10,13 +10,10 @@ dist/
 scratch/
 
 # Generated documentation
-# Pandoc output from `make website`. The site is built and deployed by
-# .github/workflows/docs.yml, so this output is never committed.
-# Hand-written demo and test pages are kept.
-/*.html
-!/demo_*.html
-!/textarea-agent-list-test.html
-!/textarea-csv_test.html
+# `make website` assembles the published site here, including the Pagefind
+# index. .github/workflows/docs.yml builds and deploys it; it is never
+# committed.
+/docs/
 
 # macOS system files
 .DS_Store

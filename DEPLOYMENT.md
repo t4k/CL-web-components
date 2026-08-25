@@ -25,7 +25,7 @@ This file is included in gitignore and is **not committed to git**.
 Use this workflow when **only documentation (`.md`) files have changed**.
 
 Documentation is published automatically. Pushing to `main` triggers the
-[Build and deploy docs](.github/workflows/docs.yml) GitHub Actions workflow, which
+`.github/workflows/docs.yml` GitHub Actions workflow, which
 runs Pandoc over every `*.md` file, rebuilds the Pagefind search index, and
 deploys the result straight to GitHub Pages. There is no `gh-pages` branch and
 no publishing script to run.
@@ -36,15 +36,22 @@ no publishing script to run.
 make website
 ```
 
-This converts all `*.md` files to `*.html` using **Pandoc** so you can open them
-in a browser before pushing. It is only a preview -- the published site is built
-from scratch by CI, not from these files.
+This assembles the complete site into `docs/`: Pandoc converts every `*.md`
+file to HTML, the hand-written demo pages and runtime assets are copied in, and
+the Pagefind search index is rebuilt. Serve it to preview:
 
-The generated `*.html` files are gitignored, so there is nothing to commit or
-clean up afterwards. `make -f website.mak clean` removes them.
+```bash
+python3 -m http.server -d docs
+```
 
-Note that `llm_notes/` holds developer reference material and is excluded from
-the published site.
+CI runs this same target and uploads `docs/` verbatim, so what you see locally
+is what gets published.
+
+`docs/` is gitignored, so there is nothing to commit or clean up afterwards.
+`make -f website.mak clean` removes it.
+
+Only what `make website` copies into `docs/` is served. The Markdown sources,
+build scripts and `llm_notes/` stay in the repository but are not published.
 
 ## Step 2. Save and push your working branch
 

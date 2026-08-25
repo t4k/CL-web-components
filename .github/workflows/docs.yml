@@ -1,8 +1,9 @@
 name: Build and deploy docs
 
-# Builds the documentation site the same way `make website` does locally
-# (Pandoc + Pagefind) and publishes it straight to GitHub Pages as an
-# artifact -- no `gh-pages` branch, no `publish.bash`, no merge prompt.
+# `make website` assembles the whole published site into docs/ -- Pandoc
+# output, hand-written demo pages, runtime assets and the Pagefind index.
+# This uploads that directory straight to GitHub Pages: no `gh-pages`
+# branch, no `publish.bash`, no merge prompt.
 #
 # NOTE: this only takes effect once a repo admin sets
 # Settings -> Pages -> Source to "GitHub Actions".
@@ -40,34 +41,15 @@ jobs:
           sudo dpkg -i /tmp/pandoc.deb
           pandoc --version | head -n 1
 
-      - name: Convert Markdown to HTML
+      - name: Install Pagefind
+        run: npm install -g "pagefind@${PAGEFIND_VERSION}"
+
+      - name: Build site
         run: make website
-
-      - name: Assemble site
-        run: |
-          mkdir -p _site
-          rsync -a ./ _site/ \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude '_site' \
-            --exclude '.vscode' \
-            --exclude 'dist' \
-            --exclude 'test' \
-            --exclude 'llm_notes' \
-            --exclude 'pagefind'
-
-      - name: Build Pagefind search index
-        run: |
-          npx -y "pagefind@${PAGEFIND_VERSION}" \
-            --site _site \
-            --output-path _site/pagefind \
-            --glob "{*.html,docs/*.html}" \
-            --force-language en-US \
-            --exclude-selectors "nav,header,footer"
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: _site
+          path: docs
 
   deploy:
     needs: build
