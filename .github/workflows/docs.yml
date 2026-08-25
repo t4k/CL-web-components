@@ -5,12 +5,16 @@ name: Build and deploy docs
 # This uploads that directory straight to GitHub Pages: no `gh-pages`
 # branch, no `publish.bash`, no merge prompt.
 #
+# Pull requests run the build but skip the deploy, so a change that breaks
+# the docs build fails in review rather than after merge.
+#
 # NOTE: this only takes effect once a repo admin sets
 # Settings -> Pages -> Source to "GitHub Actions".
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -53,6 +57,8 @@ jobs:
 
   deploy:
     needs: build
+    # Pull requests build but do not publish.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
