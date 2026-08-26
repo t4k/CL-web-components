@@ -91,7 +91,20 @@ jobs:
       - name: Build search index
         run: |
           pagefind --site _site --force-language en-US \
-            --exclude-selectors "nav,header,footer"
+            --exclude-selectors "nav,header,footer" | tee /tmp/pagefind.log
+
+      - name: Summarise the build
+        run: |
+          INDEXED="$(grep -oE 'Indexed [0-9]+ pages' /tmp/pagefind.log | grep -oE '[0-9]+' || echo '?')"
+          {
+            echo "### Site built"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| pages rendered | $(find _site -name '*.html' | wc -l | tr -d ' ') |"
+            echo "| pages indexed | $INDEXED |"
+            echo "| total files | $(find _site -type f | wc -l | tr -d ' ') |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v5
         with:
@@ -108,3 +121,6 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Summarise the deployment
+        run: echo "Deployed to ${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"

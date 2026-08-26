@@ -83,9 +83,28 @@ jobs:
 
       - name: Invalidate CloudFront
         if: ${{ !inputs.dry_run }}
+        id: invalidate
         run: |
           # Scoped to this project's prefix. The old script invalidated /*,
           # which flushed every other asset on the distribution too.
-          aws cloudfront create-invalidation \
+          ID="$(aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.AWS_DISTRIBUTION_ID }}" \
-            --paths "/${PREFIX}/*"
+            --paths "/${PREFIX}/*" --query 'Invalidation.Id' --output text)"
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+
+      - name: Summarise the upload
+        if: always()
+        run: |
+          {
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo "### Dry run — nothing was uploaded"
+            else
+              echo "### Published to the CDN"
+            fi
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| bundles | $(ls -1 dist/*.js 2>/dev/null | wc -l | tr -d ' ') |"
+            echo "| prefix | \`/${PREFIX}/\` |"
+            echo "| invalidation | \`${{ steps.invalidate.outputs.id || 'skipped' }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
