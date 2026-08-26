@@ -1,8 +1,8 @@
 // CL-web-components version and license information.
 
-export const version = '0.2.0-alpha1',
-releaseDate = '2026-08-26',
-releaseHash = '70bf3c0',
+export const version = '0.0.12',
+releaseDate = '2025-07-17',
+releaseHash = '9729d57',
 licenseText = `
 
 Copyright (c) 2025, Caltech
