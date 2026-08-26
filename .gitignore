@@ -9,6 +9,11 @@ bin/
 dist/
 scratch/
 
+# Generated documentation
+# .github/workflows/docs.yml assembles the published site into _site/,
+# including the Pagefind index, and deploys it. Never committed.
+/_site/
+
 # macOS system files
 .DS_Store
 

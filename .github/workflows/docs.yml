@@ -51,6 +51,13 @@ jobs:
       - name: Install Pagefind
         run: npm install -g "pagefind@${PAGEFIND_VERSION}"
 
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Bundle components
+        run: deno task build
+
       - name: Render Markdown
         run: |
           mkdir -p _site
@@ -70,9 +77,9 @@ jobs:
       - name: Copy pages and assets
         run: |
           cp -p demo_*.html *test*.html _site/ 2>/dev/null || true
-          # The component bundles and mod.js are what consuming pages import
-          # from this site, so they are published alongside the docs.
-          cp -p *.js LICENSE _site/
+          # dist/*.js are the freshly built bundles; mod.js is the documented
+          # ES module entry point and imports from src/, which is copied too.
+          cp -p dist/*.js mod.js LICENSE _site/
           cp -Rp css src _site/
 
       - name: Build search index
