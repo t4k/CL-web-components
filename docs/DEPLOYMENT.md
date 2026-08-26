@@ -117,86 +117,44 @@ that prefix.
 
 ---
 
-# Deploy a New Release  
+# Deploy a New Release
 
-Use this workflow when creating a **versioned GitHub release**.
+Releases are cut from `codemeta.json`. It is the only file you edit.
 
-## Step 1. Update release metadata
+## Step 1. Update the release metadata
 
 Edit `codemeta.json` and update:
 
-- Version number
-- Release notes
-
-## Step 2. Build compiled output
-
-```bash
-make build
-```
-
-This command also regenerates several files from `codemeta.json`:
-
-- `README.md`
-- `version.js`
-- `CITATION.cff`
-- `about.md`
-
-## Step 3. Build the distribution bundle
-
-```bash
-make dist
-```
-
-This command:
-
-- Bundles files into `dist/`
-- Copies documentation files:
-  - `INSTALL.md`
-  - `README.md`
-  - `about.md`
-  - `codemeta.json`
-  - `CITATION.cff`
-  - `LICENSE`
-- Creates a release archive:
-
-```
-cl-web-components-<version>.zip
-```
-
-## Step 4. Save and push your working branch
-
-If you added **new files**, stage them first:
-
-```bash
-git add <filename>
-```
+- `version`
+- `releaseNotes`
 
 Then commit and push:
 
 ```bash
-make save msg="your commit message"
+make save msg="prep for v0.0.17"
 ```
 
-> `make save` uses `git commit -am` which only commits already-tracked files. New files must be staged with `git add` first.
+## Step 2. Wait for the draft
 
-## Step 5. Create a draft GitHub release
+Pushing `codemeta.json` to `main` triggers two workflows:
 
-```bash
-./release.bash
-```
+- **Regenerate derived files** rewrites `README.md`, `CITATION.cff` and
+  `about.md` from the new metadata and commits the result.
+- **Draft release** stamps `src/version.js`, bundles the components, builds
+  `cl-web-components-<version>.zip` and opens a **draft** GitHub release
+  tagged `v<version>`.
 
-This script:
+Neither needs anything installed locally. If the version has already been
+released, the draft workflow exits without doing anything.
 
-- Reads the version and release notes from `codemeta.json`
-- Commits changes
-- Creates a **draft GitHub release** using the `gh` CLI
-- Uploads the `.zip` archive
+## Step 3. Publish the draft
 
-## Step 6. Publish the release
+Review the draft at
+<https://github.com/caltechlibrary/CL-web-components/releases> and publish it.
 
-Open the GitHub releases page and publish the draft:
-
-https://github.com/caltechlibrary/CL-web-components/releases
+Publishing is the only manual step, and it is deliberate: it is irreversible,
+and it triggers **Publish components to CDN**, which uploads the bundles to
+`media.library.caltech.edu` and invalidates the CloudFront cache.
 
 ---
 
@@ -207,8 +165,7 @@ https://github.com/caltechlibrary/CL-web-components/releases
 | Compile source code | `make build` |
 | Save and push working branch | `make save msg="your message"` |
 | Deploy components to the CDN | Actions -> Publish components to CDN |
-| Build distribution bundle | `make dist` |
-| Create GitHub release | `./release.bash` |
+| Cut a release | edit `codemeta.json`, push, publish the draft |
 
 ---
 
