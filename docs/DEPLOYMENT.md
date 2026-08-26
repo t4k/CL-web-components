@@ -39,6 +39,12 @@ There is no HTML to build by hand. The **Build and deploy docs** workflow
 renders every `*.md` with Pandoc, rebuilds the Pagefind index, and publishes
 to GitHub Pages on every push to `main`.
 
+Documentation sources live in `docs/`. The files `cmt` generates into the
+repository root -- `README.md`, `about.md` and `INSTALL.md` -- are rendered
+from there, because `cmt` can only write to the root. The Pandoc template and
+filters live in `pandoc/`. `llm_notes/` stays in the repository but is not
+published.
+
 ## Step 2. Confirm the deployment
 
 Watch the run finish under the repository's **Actions** tab, or from the
