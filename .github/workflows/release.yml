@@ -102,7 +102,12 @@ jobs:
           TAG="${{ steps.v.outputs.tag }}"
           URL="${{ github.server_url }}/${{ github.repository }}/releases/tag/$TAG"
 
-          # cme stamps dateModified itself on every change.
+          # cme's manual says dateModified is "updated each time you change
+          # something", but it only normalises an existing value and never
+          # refreshes it -- cme.ts does not reference the field at all. Set it
+          # explicitly, or it stays at whatever it was when someone last
+          # remembered.
+          cme codemeta.json "dateModified=$(date -u +%Y-%m-%d)"
           cme codemeta.json "version=${{ steps.v.outputs.version }}"
           cme codemeta.json "datePublished=$(date -u +%Y-%m-%d)"
           cme codemeta.json "releaseNotes=$URL"
