@@ -1,26 +1,27 @@
 ---
 title: CL-web-components
-abstract: "CL-web-components provides a collection of Web Components used by Caltech Library across sites and projects.
+abstract: |-
+  CL-web-components provides a collection of Web Components used by Caltech Library across sites and projects.
 
-The following are the components currently provided.
+  The following are the components currently provided.
 
-&#x60;footer-global&#x60;
-: This component provides a standard footer with detailed information about the library
+  `footer-global`
+  : This component provides a standard footer with detailed information about the library
 
-&#x60;footer-global-lite&#x60;
-: This component provides a lighter weight version of the &#x60;footer-global&#x60; component
+  `footer-global-lite`
+  : This component provides a lighter weight version of the `footer-global` component
 
-&#x60;ul-a-to-z&#x60;
-: This component takes an innerHTML containing a UL list. The UL list is then turned into an A to Z navigatable UL List. If JavaScript is unavailable then the innerHTML UL remains as a fallback.
+  `ul-a-to-z`
+  : This component takes an innerHTML containing a UL list. The UL list is then turned into an A to Z navigatable UL List. If JavaScript is unavailable then the innerHTML UL remains as a fallback.
 
-&#x60;textarea-csv&#x60;
-: This is a textarea like component who&#x27;s innerHTML content is CSV data. The component will display this as an editable table. 
+  `textarea-csv`
+  : This is a textarea like component who's innerHTML content is CSV data. The component will display this as an editable table. 
 
-&#x60;textarea-agent-list&#x60;
-: This element wraps a textarea containing a list of agents expressed as JSON. 
+  `textarea-agent-list`
+  : This element wraps a textarea containing a list of agents expressed as JSON. 
 
-&#x60;table-sortable&#x60;
-: This is a component that takes an innerHTML containing table. It makes the table sortable by the column headings and provides a filter input that lets you enter text to filter by and pick a column to filter on."
+  `table-sortable`
+  : This is a component that takes an innerHTML containing table. It makes the table sortable by the column headings and provides a filter input that lets you enter text to filter by and pick a column to filter on.
 authors:
   - family_name: Doiel
     given_name: R. S.
@@ -82,22 +83,22 @@ CL-web-components provides a collection of Web Components used by Caltech Librar
 
 The following are the components currently provided.
 
-&#x60;footer-global&#x60;
+`footer-global`
 : This component provides a standard footer with detailed information about the library
 
-&#x60;footer-global-lite&#x60;
-: This component provides a lighter weight version of the &#x60;footer-global&#x60; component
+`footer-global-lite`
+: This component provides a lighter weight version of the `footer-global` component
 
-&#x60;ul-a-to-z&#x60;
+`ul-a-to-z`
 : This component takes an innerHTML containing a UL list. The UL list is then turned into an A to Z navigatable UL List. If JavaScript is unavailable then the innerHTML UL remains as a fallback.
 
-&#x60;textarea-csv&#x60;
-: This is a textarea like component who&#x27;s innerHTML content is CSV data. The component will display this as an editable table. 
+`textarea-csv`
+: This is a textarea like component who's innerHTML content is CSV data. The component will display this as an editable table. 
 
-&#x60;textarea-agent-list&#x60;
+`textarea-agent-list`
 : This element wraps a textarea containing a list of agents expressed as JSON. 
 
-&#x60;table-sortable&#x60;
+`table-sortable`
 : This is a component that takes an innerHTML containing table. It makes the table sortable by the column headings and provides a filter input that lets you enter text to filter by and pick a column to filter on.
 
 - [License](https://caltechlibrary.github.io/CL-web-components/LICENSE)
