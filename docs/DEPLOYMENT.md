@@ -119,42 +119,43 @@ that prefix.
 
 # Deploy a New Release
 
-Releases are cut from `codemeta.json`. It is the only file you edit.
+You do two things: choose how the version increments, and approve the draft.
 
-## Step 1. Update the release metadata
+## Step 1. Run the release workflow
 
-Edit `codemeta.json` and update:
-
-- `version`
-- `releaseNotes`
-
-Then commit and push:
+From the Actions tab, run **Draft release** and pick `patch`, `minor` or
+`major`. From the command line:
 
 ```bash
-make save msg="prep for v0.0.17"
+gh workflow run release.yml -f bump=patch
 ```
 
-## Step 2. Wait for the draft
+There is an optional `version` input for the rare case where you need an exact
+number rather than an increment.
 
-Pushing `codemeta.json` to `main` triggers two workflows:
+The workflow works out the next version from `codemeta.json`, then makes a
+single commit containing the bumped `codemeta.json`, the regenerated
+`README.md`, `CITATION.cff` and `about.md`, and a stamped `src/version.js`. It
+tags that commit, builds the bundles and the zip, and opens a **draft** release.
 
-- **Regenerate derived files** rewrites `README.md`, `CITATION.cff` and
-  `about.md` from the new metadata and commits the result.
-- **Draft release** stamps `src/version.js`, bundles the components, builds
-  `cl-web-components-<version>.zip` and opens a **draft** GitHub release
-  tagged `v<version>`.
+Everything lands in one commit, so the tag can never point at a half-updated
+tree.
 
-Neither needs anything installed locally. If the version has already been
-released, the draft workflow exits without doing anything.
+## Step 2. Write the notes and publish
 
-## Step 3. Publish the draft
+Open the draft, write the release notes in GitHub's editor -- it starts with
+the auto-generated commit list -- and publish:
 
-Review the draft at
-<https://github.com/caltechlibrary/CL-web-components/releases> and publish it.
+```bash
+gh release view --web
+```
 
-Publishing is the only manual step, and it is deliberate: it is irreversible,
-and it triggers **Publish components to CDN**, which uploads the bundles to
+Publishing is the only manual step and the only irreversible one. It triggers
+**Publish components to CDN**, which uploads the bundles to
 `media.library.caltech.edu` and invalidates the CloudFront cache.
+
+`codemeta.json` records the release URL in `releaseNotes` rather than a copy of
+the prose, so the notes live in exactly one place.
 
 ---
 
@@ -165,7 +166,7 @@ and it triggers **Publish components to CDN**, which uploads the bundles to
 | Compile source code | `make build` |
 | Save and push working branch | `make save msg="your message"` |
 | Deploy components to the CDN | Actions -> Publish components to CDN |
-| Cut a release | edit `codemeta.json`, push, publish the draft |
+| Cut a release | `gh workflow run release.yml -f bump=patch`, then publish the draft |
 
 ---
 

@@ -1,4 +1,4 @@
-name: Regenerate derived files
+name: Regenerate derivatives
 
 # README.md, CITATION.cff and about.md are generated from codemeta.json by
 # CMTools (`cmt`). Keeping them current used to depend on someone remembering
@@ -19,7 +19,7 @@ on:
       - 'README.md'
       - 'CITATION.cff'
       - 'about.md'
-      - '.github/workflows/regenerate-derived.yml'
+      - '.github/workflows/regenerate-derivatives.yml'
   workflow_dispatch:
 
 permissions:
@@ -27,7 +27,7 @@ permissions:
 
 # Never let two reconciliations race for the same branch.
 concurrency:
-  group: regenerate-derived
+  group: regenerate-derivatives
   cancel-in-progress: false
 
 env:

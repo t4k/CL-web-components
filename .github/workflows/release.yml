@@ -1,19 +1,33 @@
 name: Draft release
 
-# Cuts a draft GitHub release whenever codemeta.json names a version that has
-# not been released yet. codemeta.json is the single source of truth: bump
-# `version` and write `releaseNotes`, push, and everything below is mechanical.
+# The human does two things: run this workflow with a bump type, then review
+# and publish the draft it produces. Everything between is mechanical.
 #
-# A human still publishes the draft. That is the one irreversible step -- once
-# published, people download it, and publishing is what triggers the CDN
-# upload -- so it stays a deliberate click rather than a side effect.
+# Dispatch only, deliberately. Editing codemeta.json by hand triggers
+# "Regenerate derivatives" and nothing else, so a release is never a side
+# effect of touching a file.
+#
+# Everything this changes lands in ONE commit -- the bumped codemeta.json, the
+# regenerated derivatives and the stamped src/version.js -- and the tag points
+# at that commit. There is no window in which the tree is half updated.
+#
+# The release prose is written in GitHub's release editor at approval time.
+# codemeta.json records the release URL instead, which is predictable from the
+# version, so the notes live in one place and the metadata points at it.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'codemeta.json'
   workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Which part of the version to increment'
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+        required: true
+      version:
+        description: 'Override: set an exact version (leave blank to use the bump)'
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -31,84 +45,101 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Read version from codemeta.json
+      - name: Work out the next version
         id: v
-        run: |
-          VERSION="$(jq -r .version codemeta.json)"
-          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-            echo "::error::codemeta.json has no version"; exit 1
-          fi
-          echo "version=$VERSION"   >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION"      >> "$GITHUB_OUTPUT"
-
-      # Draft releases do not create their tag until they are published, so
-      # checking for the tag alone would re-cut a draft on every push.
-      - name: Skip if this version is already released
-        id: check
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view "${{ steps.v.outputs.tag }}" >/dev/null 2>&1; then
-            echo "${{ steps.v.outputs.tag }} already exists (draft or published); nothing to do."
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+          CURRENT="$(jq -r .version codemeta.json)"
+          if ! printf '%s' "$CURRENT" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::codemeta.json version '$CURRENT' is not X.Y.Z"; exit 1
           fi
 
+          OVERRIDE="${{ inputs.version }}"
+          if [ -n "$OVERRIDE" ]; then
+            if ! printf '%s' "$OVERRIDE" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::override version '$OVERRIDE' is not X.Y.Z"; exit 1
+            fi
+            NEXT="$OVERRIDE"
+          else
+            IFS=. read -r MA MI PA <<< "$CURRENT"
+            case "${{ inputs.bump }}" in
+              major) MA=$((MA+1)); MI=0; PA=0 ;;
+              minor) MI=$((MI+1)); PA=0 ;;
+              patch) PA=$((PA+1)) ;;
+            esac
+            NEXT="$MA.$MI.$PA"
+          fi
+
+          echo "::notice::$CURRENT -> $NEXT (${{ inputs.bump }})"
+
+          if gh release view "v$NEXT" >/dev/null 2>&1; then
+            echo "::error::v$NEXT already exists"; exit 1
+          fi
+          # If the version currently in codemeta.json was never released, the
+          # bump silently skips it. Worth knowing before publishing.
+          if [ -z "$OVERRIDE" ] && ! gh release view "v$CURRENT" >/dev/null 2>&1; then
+            echo "::warning::codemeta.json says $CURRENT but v$CURRENT has no release; v$CURRENT will be skipped."
+          fi
+
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "version=$NEXT"    >> "$GITHUB_OUTPUT"
+          echo "tag=v$NEXT"       >> "$GITHUB_OUTPUT"
+
       - uses: denoland/setup-deno@v2
-        if: steps.check.outputs.exists == 'false'
         with:
           deno-version: v2.x
 
-      - name: Install cmt
-        if: steps.check.outputs.exists == 'false'
+      - name: Install CMTools
         run: |
           curl -fsSL -o /tmp/cmt.zip \
             "https://github.com/caltechlibrary/CMTools/releases/download/v${CMT_VERSION}/CMTools-v${CMT_VERSION}-Linux-x86_64.zip"
-          unzip -q -j /tmp/cmt.zip 'bin/cmt' -d /usr/local/bin
-          chmod +x /usr/local/bin/cmt
+          unzip -q -j /tmp/cmt.zip 'bin/cmt' 'bin/cme' -d /usr/local/bin
+          chmod +x /usr/local/bin/cmt /usr/local/bin/cme
 
-      # cmt resolves its output format from the exact filename and can only
-      # write to the repository root, so generate there and move the file into
-      # src/ -- which is what mod.js imports and what gets bundled.
-      - name: Stamp src/version.js
-        if: steps.check.outputs.exists == 'false'
+      - name: Update codemeta.json and everything derived from it
         run: |
+          TAG="${{ steps.v.outputs.tag }}"
+          URL="${{ github.server_url }}/${{ github.repository }}/releases/tag/$TAG"
+
+          # cme stamps dateModified itself on every change.
+          cme codemeta.json "version=${{ steps.v.outputs.version }}"
+          cme codemeta.json "datePublished=$(date -u +%Y-%m-%d)"
+          cme codemeta.json "releaseNotes=$URL"
+          rm -f codemeta.json.bak
+
+          cmt codemeta.json README.md CITATION.cff about.md
+
+          # cmt can only write to the repository root, but src/version.js is
+          # what mod.js imports and what ends up in every bundle.
           cmt codemeta.json version.js
           mv version.js src/version.js
-          if git diff --quiet -- src/version.js; then
-            echo "src/version.js already current."
-          else
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add src/version.js
-            git commit -m "Stamp src/version.js for ${{ steps.v.outputs.tag }}"
-            git push
-          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add codemeta.json README.md CITATION.cff about.md src/version.js
+          git commit -m "Prepare $TAG"
+          git push
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        id: prep
 
       - name: Build the distribution
-        if: steps.check.outputs.exists == 'false'
         run: |
           deno task build
-          # Ship every component individually as well as the combined bundle.
-          # The old Makefile listed only four of them by hand.
           cp README.md about.md INSTALL.md LICENSE CITATION.cff codemeta.json dist/
           cd dist
           zip -q "cl-web-components-${{ steps.v.outputs.version }}.zip" \
             *.js *.md LICENSE CITATION.cff codemeta.json
-          unzip -l "cl-web-components-${{ steps.v.outputs.version }}.zip"
+          unzip -l "cl-web-components-${{ steps.v.outputs.version }}.zip" | tail -3
 
       - name: Create the draft release
-        if: steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          jq -r .releaseNotes codemeta.json > /tmp/notes.md
           gh release create "${{ steps.v.outputs.tag }}" \
             --draft \
             --title "${{ steps.v.outputs.tag }}" \
-            --notes-file /tmp/notes.md \
             --generate-notes \
-            --target "$(git rev-parse HEAD)" \
+            --target "${{ steps.prep.outputs.sha }}" \
             "dist/cl-web-components-${{ steps.v.outputs.version }}.zip"
-          echo "Draft ${{ steps.v.outputs.tag }} created. Review and publish it to trigger the CDN upload."
+          echo "::notice::Draft ${{ steps.v.outputs.tag }} ready. Write the notes in the release editor, then publish to trigger the CDN upload."
