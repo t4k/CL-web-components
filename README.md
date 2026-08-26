@@ -47,7 +47,7 @@ This release adds a new `<card-layout>` component for displaying three-card layo
 
 ## Software Requirements
 
-- Deno >= 1.0 (WRONG, introduced to test reconciliation)
+- Deno >= 2.7 (for bundling dependencies)
 
 ### Software Suggestions
 
