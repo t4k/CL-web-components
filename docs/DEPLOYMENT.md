@@ -135,9 +135,12 @@ number rather than an increment.
 
 The workflow works out the next version from `codemeta.json`, then makes a
 single commit containing the bumped `codemeta.json`, the regenerated
-`README.md`, `CITATION.cff` and `about.md`, and a stamped `src/version.js`. It
-tags that commit, builds the bundles and the zip, and opens a **draft**
-release.
+`README.md`, `CITATION.cff` and `about.md`. It tags that commit, builds the
+bundles and the zip, and opens a **draft** release.
+
+`src/version.js` is not committed. `deno task build` generates it from
+`codemeta.json` before bundling, so the version, release date and commit hash
+baked into every bundle always match the commit being released.
 
 Everything lands in one commit, so the tag can never point at a half-updated
 tree.

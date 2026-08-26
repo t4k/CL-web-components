@@ -7,9 +7,10 @@ name: Regenerate derivatives
 # anyone needs to edit -- and nobody needs cmt installed locally.
 #
 # IMPORTANT: only hash-free outputs belong in DERIVED. cmt interpolates the
-# current git HEAD into version.js, Makefile and the installer scripts via
-# gitReleaseHash(), so regenerating those produces a diff on every commit --
-# including this workflow's own -- and would never converge.
+# current git HEAD into the installer scripts via gitReleaseHash(), so
+# regenerating those produces a diff on every commit -- including this
+# workflow's own -- and would never converge. src/version.js had the same
+# problem and is no longer tracked at all; `deno task build` generates it.
 
 on:
   push:

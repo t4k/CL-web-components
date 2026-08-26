@@ -9,6 +9,11 @@ bin/
 dist/
 scratch/
 
+# Generated from codemeta.json by `deno task version`, which `deno task build`
+# runs first. Tracked previously, which is why it shipped 0.0.12 for four
+# releases -- nothing regenerated it.
+/src/version.js
+
 # Generated documentation
 # .github/workflows/docs.yml assembles the published site into _site/,
 # including the Pagefind index, and deploys it. Never committed.
