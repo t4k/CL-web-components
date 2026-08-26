@@ -9,6 +9,10 @@ name: Build and deploy docs
 # Nothing in this repository reads website.mak, so it can be regenerated
 # freely without affecting the published site.
 #
+# The same applies to pandoc/. cmt generates page.tmpl, links-to-html.lua and
+# add-col-scope.lua into the repository root; this build reads the copies in
+# pandoc/, so any root copies a `cmt` run leaves behind are inert.
+#
 # Pull requests run the build but skip the deploy, so a change that breaks
 # the docs build fails in review rather than after merge.
 #
@@ -71,9 +75,9 @@ jobs:
             [ "$BASE" = "README" ] && OUT="_site/index.html"
             echo "$SRC -> $OUT"
             pandoc --metadata title="$BASE" -s --to html5 "$SRC" -o "$OUT" \
-              --lua-filter=links-to-html.lua \
-              --lua-filter=add-col-scope.lua \
-              --template=page.tmpl
+              --lua-filter=pandoc/links-to-html.lua \
+              --lua-filter=pandoc/add-col-scope.lua \
+              --template=pandoc/page.tmpl
           done
 
       - name: Copy pages and assets
@@ -81,7 +85,7 @@ jobs:
           cp -p docs/demo_*.html docs/*test*.html _site/
           # dist/*.js are the freshly built bundles; mod.js is the documented
           # ES module entry point and imports from src/, which is copied too.
-          cp -p dist/*.js mod.js LICENSE .nojekyll _site/
+          cp -p dist/*.js mod.js LICENSE _site/
           cp -Rp css src _site/
 
       - name: Build search index

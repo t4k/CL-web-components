@@ -47,16 +47,16 @@ To check a single page locally:
 ```bash
 pandoc --metadata title=user_manual -s --to html5 docs/user_manual.md \
   -o /tmp/user_manual.html \
-  --lua-filter=links-to-html.lua \
-  --lua-filter=add-col-scope.lua \
-  --template=page.tmpl
+  --lua-filter=pandoc/links-to-html.lua \
+  --lua-filter=pandoc/add-col-scope.lua \
+  --template=pandoc/page.tmpl
 ```
 
 Documentation sources live in `docs/`. The files `cmt` generates into the
-repository root -- `README.md`, `about.md`, `INSTALL.md` and the
-`INSTALL_NOTES` pages -- are rendered from there, because `cmt` can only write
-to the root. Build scripts and `llm_notes/` stay in the repository but are not
-published.
+repository root -- `README.md`, `about.md` and `INSTALL.md` -- are rendered
+from there, because `cmt` can only write to the root. The Pandoc template and
+filters live in `pandoc/`. Build scripts and `llm_notes/` stay in the
+repository but are not published.
 
 ## Step 2. Save and push your working branch
 
