@@ -10,16 +10,10 @@ dist/
 scratch/
 
 # Generated documentation
-# The docs workflow assembles the published site here and rebuilds the
-# Pagefind index; none of it is committed. Hand-written demo and test pages
-# are source and are kept.
+# .github/workflows/docs.yml assembles the published site into _site/,
+# including the Pagefind index, and deploys it. Never committed.
+# Sources live in docs/ and are tracked.
 /_site/
-/pagefind/
-/*.html
-!/demo_*.html
-!/textarea-agent-list-test.html
-!/textarea-csv_test.html
-/llm_notes/*.html
 
 # macOS system files
 .DS_Store

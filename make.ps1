@@ -28,6 +28,7 @@ function Generate-Readme {
 
 function Generate-VersionJs {
     cmt codemeta.json version.js
+    Move-Item -Force version.js src/version.js
 }
 
 function Generate-Citation {

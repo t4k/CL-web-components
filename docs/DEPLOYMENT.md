@@ -37,6 +37,22 @@ request builds it without publishing. That run's `github-pages` artifact is the
 exact site that would be deployed, which makes it the most accurate preview
 available.
 
+To check a single page locally:
+
+```bash
+pandoc --metadata title=user_manual -s --to html5 docs/user_manual.md \
+  -o /tmp/user_manual.html \
+  --lua-filter=pandoc/links-to-html.lua \
+  --lua-filter=pandoc/add-col-scope.lua \
+  --template=pandoc/page.tmpl
+```
+
+Documentation sources live in `docs/`. The files `cmt` generates into the
+repository root -- `README.md`, `about.md` and `INSTALL.md` -- are rendered from
+there, because `cmt` can only write to the root. The Pandoc template and
+filters live in `pandoc/`. Component bundles are built into `dist/`, which is
+gitignored.
+
 ## Step 2. Save and push your working branch
 
 If you added **new files**, stage them first:
