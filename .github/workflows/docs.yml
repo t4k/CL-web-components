@@ -50,7 +50,16 @@ jobs:
         run: npm install -g "pagefind@${PAGEFIND_VERSION}"
 
       - name: Build site
-        run: make website
+        run: |
+          make website
+          # website.mak is hand-maintained and diverges from CMTools'
+          # template, which renders HTML beside the sources instead. If it
+          # gets regenerated, `make website` still succeeds but produces no
+          # _site/ -- say so plainly rather than failing later in tar.
+          if [ ! -d _site ]; then
+            echo "::error::make website produced no _site/ directory. Has website.mak been regenerated with cmt? See the banner at the top of website.mak."
+            exit 1
+          fi
 
       - uses: actions/upload-pages-artifact@v5
         with:
