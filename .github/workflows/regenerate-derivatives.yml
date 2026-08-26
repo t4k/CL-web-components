@@ -1,10 +1,13 @@
 name: Regenerate derivatives
 
-# README.md, CITATION.cff and about.md are generated from codemeta.json by
-# CMTools (`cmt`). Keeping them current used to depend on someone remembering
-# to run `make build`, so they drifted. This regenerates them on every push to
-# main and commits the result, which means codemeta.json is the only file
-# anyone needs to edit -- and nobody needs cmt installed locally.
+# CITATION.cff is generated from codemeta.json by CMTools (`cmt`). Keeping it
+# current used to depend on someone remembering to run `make build`, so it
+# drifted. This regenerates it on every push to main and commits the result,
+# which means codemeta.json is the only file anyone needs to edit -- and
+# nobody needs cmt installed locally.
+#
+# README.md is deliberately NOT derived. It is hand-written and owned by this
+# repository: repository details propagate only to machine-readable files.
 #
 # IMPORTANT: only hash-free outputs belong in DERIVED. cmt interpolates the
 # current git HEAD into the installer scripts via gitReleaseHash(), so
@@ -17,9 +20,7 @@ on:
     branches: [main]
     paths:
       - 'codemeta.json'
-      - 'README.md'
       - 'CITATION.cff'
-      - 'about.md'
       - '.github/workflows/regenerate-derivatives.yml'
   workflow_dispatch:
 
@@ -33,7 +34,7 @@ concurrency:
 
 env:
   CMT_VERSION: 0.0.46
-  DERIVED: README.md CITATION.cff about.md
+  DERIVED: CITATION.cff
 
 jobs:
   regenerate:
