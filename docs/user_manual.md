@@ -2,7 +2,7 @@
 # User Manual
 
 - [README](./)
-- [LICENSE](LICENSE)
+- [LICENSE](LICENSE.txt)
 - Web Components
   - [Card Layout](card-layout.md)
     - Source for [card-layout](https://github.com/caltechlibrary/CL-web-components/blob/main/src/card-layout.js)

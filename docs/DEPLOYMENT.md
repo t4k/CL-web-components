@@ -52,11 +52,11 @@ pandoc --metadata title=user_manual -s --to html5 docs/user_manual.md \
   --template=pandoc/page.tmpl
 ```
 
-Documentation sources live in `docs/`. The files `cmt` generates into the
-repository root -- `README.md`, `about.md` and `INSTALL.md` -- are rendered
-from there, because `cmt` can only write to the root. The Pandoc template and
-filters live in `pandoc/`. Build scripts and `llm_notes/` stay in the
-repository but are not published.
+Documentation sources live in `docs/`, and only `docs/` is published.
+`docs/README.md` becomes the site's `index.html`. The root `README.md` is
+written for people browsing the repository on GitHub and is deliberately not
+rendered into the site. The Pandoc template and filters live in `pandoc/`.
+`llm_notes/` stays in the repository but is not published.
 
 ## Step 2. Save and push your working branch
 
@@ -69,10 +69,9 @@ git add <filename>
 Then commit and push:
 
 ```bash
-make save msg="your commit message"
+git commit -m "your commit message"
+git push
 ```
-
-> `make save` uses `git commit -am` which only commits already-tracked files. New files must be staged with `git add` first.
 
 ## Step 3. Confirm the deployment
 
@@ -98,7 +97,8 @@ deployed to the CDN.
 Edit the component under `src/`, then commit and push:
 
 ```bash
-make save msg="your commit message"
+git commit -m "your commit message"
+git push
 ```
 
 The bundles are build output. They are compiled by CI into `dist/`, which is
@@ -134,9 +134,12 @@ There is an optional `version` input for the rare case where you need an exact
 number rather than an increment.
 
 The workflow works out the next version from `codemeta.json`, then makes a
-single commit containing the bumped `codemeta.json`, the regenerated
-`README.md`, `CITATION.cff` and `about.md`, and a stamped `src/version.js`. It
-tags that commit, builds the bundles and the zip, and opens a **draft** release.
+single commit containing the bumped `codemeta.json`, a regenerated
+`CITATION.cff` and a stamped `src/version.js`. It tags that commit, builds the
+bundles and the zip, and opens a **draft** release.
+
+`README.md` is not regenerated: it is hand-written and owned by this
+repository. Only machine-readable files are derived from `codemeta.json`.
 
 Everything lands in one commit, so the tag can never point at a half-updated
 tree.
@@ -163,8 +166,8 @@ the prose, so the notes live in exactly one place.
 
 | Task | Command |
 |-----|---------|
-| Compile source code | `make build` |
-| Save and push working branch | `make save msg="your message"` |
+| Compile source code | `deno task build` |
+| Run the tests | `deno test --allow-read` |
 | Deploy components to the CDN | Actions -> Publish components to CDN |
 | Cut a release | `gh workflow run release.yml -f bump=patch`, then publish the draft |
 

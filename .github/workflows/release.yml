@@ -135,7 +135,7 @@ jobs:
           cme codemeta.json "releaseNotes=$URL"
           rm -f codemeta.json.bak
 
-          cmt codemeta.json README.md CITATION.cff about.md
+          cmt codemeta.json CITATION.cff
 
           # cmt can only write to the repository root, but src/version.js is
           # what mod.js imports and what ends up in every bundle.
@@ -144,7 +144,7 @@ jobs:
 
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add codemeta.json README.md CITATION.cff about.md src/version.js
+          git add codemeta.json CITATION.cff src/version.js
           git commit -m "Prepare $TAG"
           git push
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -153,10 +153,10 @@ jobs:
       - name: Build the distribution
         run: |
           deno task build
-          cp README.md about.md INSTALL.md LICENSE CITATION.cff codemeta.json dist/
+          cp README.md LICENSE.txt CITATION.cff codemeta.json dist/
           cd dist
           zip -q "cl-web-components-${{ steps.v.outputs.version }}.zip" \
-            *.js *.md LICENSE CITATION.cff codemeta.json
+            *.js *.md LICENSE.txt CITATION.cff codemeta.json
           unzip -l "cl-web-components-${{ steps.v.outputs.version }}.zip" | tail -3
 
       - name: Create the draft release
@@ -165,10 +165,15 @@ jobs:
         run: |
           PRERELEASE=""
           case "${{ steps.v.outputs.version }}" in *-*) PRERELEASE="--prerelease" ;; esac
+          # The unversioned cl-web-components.js is attached alongside the
+          # versioned zip so that
+          # .../releases/latest/download/cl-web-components.js keeps working
+          # forever. Documentation links to that, and so never goes stale.
           gh release create "${{ steps.v.outputs.tag }}" \
             --draft $PRERELEASE \
             --title "${{ steps.v.outputs.tag }}" \
             --generate-notes \
             --target "${{ steps.prep.outputs.sha }}" \
-            "dist/cl-web-components-${{ steps.v.outputs.version }}.zip"
+            "dist/cl-web-components-${{ steps.v.outputs.version }}.zip" \
+            "dist/cl-web-components.js"
           echo "::notice::Draft ${{ steps.v.outputs.tag }} ready. Write the notes in the release editor, then publish to trigger the CDN upload."
