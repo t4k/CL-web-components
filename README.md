@@ -26,11 +26,11 @@ The following are the components currently provided.
 
 ## Release Notes
 
-- version: 0.0.16
+- version: 0.0.17
 - status: wip
-- released: 2026-01-28
+- released: 2026-08-26
 
-This release adds a new `<card-layout>` component for displaying three-card layouts with images, titles, descriptions, and links. The component is responsive and uses attributes to set the content values.
+https://github.com/t4k/CL-web-components/releases/tag/v0.0.17
 
 
 ### Authors

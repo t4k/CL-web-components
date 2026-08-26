@@ -40,7 +40,7 @@ maintainer:
     id: https://orcid.org/0009-0003-7975-1922
 
 repository_code: https://github.com/caltechlibrary/CL-web-components
-version: 0.0.16
+version: 0.0.17
 license_url: https://caltechlibrary.github.io/CL-web-components/LICENSE
 
 programming_language:
@@ -55,15 +55,15 @@ keywords:
   - ES6
   - Web Components
 
-date_released: 2026-01-28
+date_released: 2026-08-26
 ---
 
 About this software
 ===================
 
-## CL-web-components 0.0.16
+## CL-web-components 0.0.17
 
-This release adds a new `<card-layout>` component for displaying three-card layouts with images, titles, descriptions, and links. The component is responsive and uses attributes to set the content values.
+https://github.com/t4k/CL-web-components/releases/tag/v0.0.17
 
 ## Authors
 
