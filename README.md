@@ -86,6 +86,11 @@ Run the tests with:
 deno test --allow-read
 ```
 
+Be aware that `test/textarea-csv_test.js` does not currently run: it imports
+`parseCSV`, which moved to `deprecated/` during an earlier reorganisation, from
+a path that no longer resolves. Whether to point it at `deprecated/`, drop
+those cases, or bring `parseCSV` back is an open question.
+
 A few conventions worth knowing before you open a pull request:
 
 - **`CITATION.cff` is generated.** It is derived from `codemeta.json` and
