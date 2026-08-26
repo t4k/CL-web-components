@@ -78,7 +78,7 @@ jobs:
 
       - name: Cache cmt
         id: cache-cmt
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.local/bin/cmt
           key: cmt-${{ env.CMT_VERSION }}-linux-x86_64
