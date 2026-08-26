@@ -30,31 +30,32 @@ runs Pandoc over every `*.md` file, rebuilds the Pagefind search index, and
 deploys the result straight to GitHub Pages. There is no `gh-pages` branch and
 no publishing script to run.
 
-## Step 1. Preview locally (optional)
+## Step 1. Preview (optional)
+
+The site is built entirely by `.github/workflows/docs.yml`. Pandoc renders
+every `docs/*.md` page plus the cmt-generated Markdown at the repository root,
+the demo pages and runtime assets are copied in, and Pagefind rebuilds the
+search index.
+
+Opening a pull request builds the site without publishing it. The run's
+`github-pages` artifact is the exact site that would be deployed, so
+downloading it is the most accurate preview available.
+
+To check a single page locally:
 
 ```bash
-make website
+pandoc --metadata title=user_manual -s --to html5 docs/user_manual.md \
+  -o /tmp/user_manual.html \
+  --lua-filter=links-to-html.lua \
+  --lua-filter=add-col-scope.lua \
+  --template=page.tmpl
 ```
 
-This assembles the complete site into `_site/`: Pandoc renders every `docs/*.md`
-page plus the cmt-generated Markdown at the repository root, the demo pages and
-runtime assets are copied in, and the Pagefind search index is rebuilt. Serve it
-to preview:
-
-```bash
-python3 -m http.server -d _site
-```
-
-CI runs this same target and uploads `_site/` verbatim, so what you see locally
-is what gets published.
-
-`_site/` is gitignored, so there is nothing to commit or clean up afterwards.
-`make -f website.mak clean` removes it.
-
-Documentation sources live in `docs/`. The generated files `cmt` writes to the
-repository root -- `README.md`, `about.md`, `INSTALL.md` and the `INSTALL_NOTES`
-pages -- are rendered from there, because `cmt` can only write to the root.
-Build scripts and `llm_notes/` stay in the repository but are not published.
+Documentation sources live in `docs/`. The files `cmt` generates into the
+repository root -- `README.md`, `about.md`, `INSTALL.md` and the
+`INSTALL_NOTES` pages -- are rendered from there, because `cmt` can only write
+to the root. Build scripts and `llm_notes/` stay in the repository but are not
+published.
 
 ## Step 2. Save and push your working branch
 
@@ -229,7 +230,6 @@ https://github.com/caltechlibrary/CL-web-components/releases
 | Task | Command |
 |-----|---------|
 | Compile source code | `make build` |
-| Preview documentation website locally | `make website` |
 | Save and push working branch | `make save msg="your message"` |
 | Preview S3 deployment | `./publish_to_s3.bash dry-run` |
 | Deploy JS to S3 and invalidate CDN cache | `./publish_to_s3.bash` |

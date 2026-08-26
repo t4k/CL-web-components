@@ -38,11 +38,6 @@ function Generate-About {
     cmt codemeta.json about.md
 }
 
-function Website {
-    & .\website.ps1 clean
-    & .\website.ps1 build
-}
-
 function Status {
     git status
 }
@@ -96,7 +91,6 @@ switch ($args[0]) {
     "version.js" { Generate-VersionJs }
     "CITATION.cff" { Generate-Citation }
     "about.md" { Generate-About }
-    "website" { Website }
     "status" { Status }
     "save" { Save $args[1] }
     "refresh" { Refresh }

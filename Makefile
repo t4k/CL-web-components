@@ -53,9 +53,6 @@ CITATION.cff: codemeta.json
 about.md: codemeta.json $(PROGRAMS)
 	cmt codemeta.json about.md
 
-website: .FORCE
-	make -f website.mak
-
 status:
 	git status
 

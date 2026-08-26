@@ -10,9 +10,9 @@ dist/
 scratch/
 
 # Generated documentation
-# `make website` assembles the published site into _site/, including the
-# Pagefind index. .github/workflows/docs.yml builds and deploys it; it is
-# never committed. Sources live in docs/ and are tracked.
+# .github/workflows/docs.yml assembles the published site into _site/,
+# including the Pagefind index, and deploys it. Never committed.
+# Sources live in docs/ and are tracked.
 /_site/
 
 # macOS system files

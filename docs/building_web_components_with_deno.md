@@ -24,15 +24,16 @@ The process to build a release is a little more complex than is convenient for a
 
 ~~~shell
 make build
-make website
-web release
+make release
 ~~~
+
+The documentation website is built and deployed by GitHub Actions, so there is
+no local website step.
 
 On Windows you can use the related PowerShell scripts that replace make. Example,
 
 ~~~pwsh
 make.ps1 build
-make.ps1 website
 make.ps1 release
 ~~~
 
