@@ -1,0 +1,79 @@
+name: Regenerate derived files
+
+# README.md, CITATION.cff and about.md are generated from codemeta.json by
+# CMTools (`cmt`). Keeping them current used to depend on someone remembering
+# to run `make build`, so they drifted. This regenerates them on every push to
+# main and commits the result, which means codemeta.json is the only file
+# anyone needs to edit -- and nobody needs cmt installed locally.
+#
+# IMPORTANT: only hash-free outputs belong in DERIVED. cmt interpolates the
+# current git HEAD into version.js, Makefile and the installer scripts via
+# gitReleaseHash(), so regenerating those produces a diff on every commit --
+# including this workflow's own -- and would never converge.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'codemeta.json'
+      - 'README.md'
+      - 'CITATION.cff'
+      - 'about.md'
+      - '.github/workflows/regenerate-derived.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Never let two reconciliations race for the same branch.
+concurrency:
+  group: regenerate-derived
+  cancel-in-progress: false
+
+env:
+  CMT_VERSION: 0.0.46
+  DERIVED: README.md CITATION.cff about.md
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      # cmt reads the version from codemeta.json and shells out to
+      # `git log -n 1`, so it needs a git checkout -- depth 1 is enough.
+      - uses: actions/checkout@v7
+
+      - name: Cache cmt
+        id: cache-cmt
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/cmt
+          key: cmt-${{ env.CMT_VERSION }}-linux-x86_64
+
+      - name: Install cmt
+        if: steps.cache-cmt.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/bin
+          curl -fsSL -o /tmp/cmt.zip \
+            "https://github.com/caltechlibrary/CMTools/releases/download/v${CMT_VERSION}/CMTools-v${CMT_VERSION}-Linux-x86_64.zip"
+          unzip -q -j /tmp/cmt.zip 'bin/cmt' -d ~/.local/bin
+          chmod +x ~/.local/bin/cmt
+
+      - name: Regenerate from codemeta.json
+        run: |
+          "$HOME/.local/bin/cmt" codemeta.json $DERIVED
+
+      - name: Commit if anything changed
+        run: |
+          if git diff --quiet -- $DERIVED; then
+            echo "Derived files already match codemeta.json; nothing to do."
+            exit 0
+          fi
+          echo "Regenerated:"
+          git diff --stat -- $DERIVED
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- $DERIVED
+          git commit -m "Regenerate derived files from codemeta.json"
+          # Pushes made with GITHUB_TOKEN do not trigger workflow runs, so
+          # this cannot recurse.
+          git push
