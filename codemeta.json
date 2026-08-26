@@ -67,11 +67,11 @@
     "CMTools >= 0.0.43",
     "Pandoc >= 3.9"
   ],
-  "version": "0.1.0",
+  "version": "0.2.0-alpha1",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/caltechlibrary/CL-web-components/issues",
   "downloadUrl": "https://github.com/caltechlibrary/CL-web-components/releases",
-  "releaseNotes": "https://github.com/t4k/CL-web-components/releases/tag/v0.1.0",
+  "releaseNotes": "https://github.com/t4k/CL-web-components/releases/tag/v0.2.0-alpha1",
   "copyrightYear": 2026,
   "copyrightHolder": "California Institute of Technology"
 }

@@ -40,7 +40,7 @@ maintainer:
     id: https://orcid.org/0009-0003-7975-1922
 
 repository_code: https://github.com/caltechlibrary/CL-web-components
-version: 0.1.0
+version: 0.2.0-alpha1
 license_url: https://caltechlibrary.github.io/CL-web-components/LICENSE
 
 programming_language:
@@ -61,9 +61,9 @@ date_released: 2026-08-26
 About this software
 ===================
 
-## CL-web-components 0.1.0
+## CL-web-components 0.2.0-alpha1
 
-https://github.com/t4k/CL-web-components/releases/tag/v0.1.0
+https://github.com/t4k/CL-web-components/releases/tag/v0.2.0-alpha1
 
 ## Authors
 
