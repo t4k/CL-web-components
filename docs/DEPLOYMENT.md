@@ -134,12 +134,16 @@ There is an optional `version` input for the rare case where you need an exact
 number rather than an increment.
 
 The workflow works out the next version from `codemeta.json`, then makes a
-single commit containing the bumped `codemeta.json`, a regenerated
-`CITATION.cff` and a stamped `src/version.js`. It tags that commit, builds the
-bundles and the zip, and opens a **draft** release.
+single commit containing the bumped `codemeta.json`, the regenerated
+`CITATION.cff`. It tags that commit, builds the bundles and the zip, and opens
+a **draft** release.
 
 `README.md` is not regenerated: it is hand-written and owned by this
 repository. Only machine-readable files are derived from `codemeta.json`.
+
+`src/version.js` is not committed. `deno task build` generates it from
+`codemeta.json` before bundling, so the version, release date and commit hash
+baked into every bundle always match the commit being released.
 
 Everything lands in one commit, so the tag can never point at a half-updated
 tree.

@@ -137,14 +137,9 @@ jobs:
 
           cmt codemeta.json CITATION.cff
 
-          # cmt can only write to the repository root, but src/version.js is
-          # what mod.js imports and what ends up in every bundle.
-          cmt codemeta.json version.js
-          mv version.js src/version.js
-
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add codemeta.json CITATION.cff src/version.js
+          git add codemeta.json CITATION.cff
           git commit -m "Prepare $TAG"
           git push
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"

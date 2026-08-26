@@ -60,6 +60,7 @@ behavior in detail.
 | `pandoc/` | Template and Lua filters used to render the website. |
 | `css/` | Stylesheets published alongside the components. |
 | `test/` | Tests, run with `deno test`. |
+| `tools/` | Build helpers. `version.js` writes `src/version.js` from `codemeta.json`. |
 | `codemeta.json` | Project metadata. `CITATION.cff` and `src/version.js` are generated from it. |
 | `.github/workflows/` | Build, docs deployment, release, and CDN publishing. |
 
@@ -75,9 +76,9 @@ cd CL-web-components
 deno task build
 ```
 
-That writes bundles into `dist/`, which is ignored. To try a change, edit the
-component in `src/`, rebuild, and open the matching demo page in `docs/` — for
-example `docs/demo_table-sortable.html`.
+That writes `src/version.js` and then the bundles into `dist/`; both are
+ignored. To try a change, edit the component in `src/`, rebuild, and open the
+matching demo page in `docs/` — for example `docs/demo_table-sortable.html`.
 
 Run the tests with:
 
@@ -87,11 +88,13 @@ deno test --allow-read
 
 A few conventions worth knowing before you open a pull request:
 
-- **Two tracked files are generated.** `CITATION.cff` and `src/version.js` are
-  derived from `codemeta.json` and rewritten by CI on every push to `main`.
-  They are in the repository so that GitHub and the bundles can read them, but
-  editing them directly does nothing lasting — your changes are overwritten on
-  the next run. Change `codemeta.json` instead.
+- **`CITATION.cff` is generated.** It is derived from `codemeta.json` and
+  rewritten by CI on every push to `main`. It is in the repository so GitHub
+  can read it, but editing it directly does nothing lasting — your changes are
+  overwritten on the next run. Change `codemeta.json` instead.
+- **`src/version.js` is generated too, and ignored.** `deno task build` writes
+  it from `codemeta.json` before bundling, so it appears in your working tree
+  after a build but is never committed.
 - **Everything else is hand-written**, including this README and all of
   `docs/`. Nothing generates them, so your prose will not be overwritten.
 - Component naming follows
