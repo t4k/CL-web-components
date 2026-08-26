@@ -6,17 +6,18 @@ This guide explains how to deploy **CL-web-components** depending on what change
 
 # Prerequisites
 
-A `media.env` file must exist in the project root before deploying to S3.
+None for documentation changes.
 
-It must contain:
+CDN deployment runs in GitHub Actions using an assumed AWS role, configured
+through these repository secrets:
 
 ```
-BUCKET_NAME
-BASE_URL
-DISTRIBUTION_ID
+AWS_ROLE_TO_ASSUME
+AWS_BUCKET
+AWS_DISTRIBUTION
 ```
 
-This file is included in gitignore and is **not committed to git**.
+No local AWS credentials and no `media.env` file are needed.
 
 ---
   
@@ -89,56 +90,30 @@ workflow completes, typically within a minute.
 
 # Deploy Updated Web Component Code
 
-Use this workflow when **component code in `src/` has changed** and needs to be deployed to the CDN.
+Use this workflow when **component code in `src/` has changed** and needs to be
+deployed to the CDN.
 
-## Step 1. Build compiled JavaScript
+## Step 1. Edit and push
 
-```bash
-make build
-```
-
-This command runs `deno task build` and bundles:
-
-- `src/*.js` > matching root-level `.js` files
-- `mod.js` > `cl-web-components.js` (combined build)
-
-## Step 2. Preview the S3 upload (optional)
-
-```bash
-./publish_to_s3.bash dry-run
-```
-
-This shows which files will be uploaded without making changes.
-
-## Step 3. Save and push your working branch
-
-If you added **new files**, stage them first:
-
-```bash
-git add <filename>
-```
-
-Then commit and push:
+Edit the component under `src/`, then commit and push:
 
 ```bash
 make save msg="your commit message"
 ```
 
-> `make save` uses `git commit -am` which only commits already-tracked files. New files must be staged with `git add` first.
+The bundles are build output. They are compiled by CI into `dist/`, which is
+gitignored, so there is nothing to rebuild or commit by hand.
 
-Pushing to `main` also rebuilds and redeploys the documentation site automatically.
+## Step 2. Publish to the CDN
 
-## Step 4. Deploy to S3 and refresh the CDN
+The **Publish components to CDN** workflow runs automatically when a GitHub
+release is published. To push the current `main` without cutting a release,
+run it manually from the Actions tab -- it accepts a `dry_run` option that
+lists what would be uploaded without uploading it.
 
-```bash
-./publish_to_s3.bash
-```
-
-This script:
-
-- Uploads root `*.js` and `css/*.css` files
-- Places them under `/cl-webcomponents/` in the S3 bucket
-- Creates a **CloudFront cache invalidation** so the CDN serves the new files
+The workflow bundles the components, uploads them and `css/*.css` under
+`/cl-webcomponents/` in the bucket, and invalidates the CloudFront cache for
+that prefix.
 
 ---
 
@@ -231,9 +206,7 @@ https://github.com/caltechlibrary/CL-web-components/releases
 |-----|---------|
 | Compile source code | `make build` |
 | Save and push working branch | `make save msg="your message"` |
-| Preview S3 deployment | `./publish_to_s3.bash dry-run` |
-| Deploy JS to S3 and invalidate CDN cache | `./publish_to_s3.bash` |
-| Invalidate CDN cache only | `./invalidate_cdn.bash` |
+| Deploy components to the CDN | Actions -> Publish components to CDN |
 | Build distribution bundle | `make dist` |
 | Create GitHub release | `./release.bash` |
 

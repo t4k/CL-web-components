@@ -1,0 +1,87 @@
+name: Publish components to CDN
+
+# Uploads the built component bundles and CSS to the S3 bucket behind
+# media.library.caltech.edu, then invalidates the CloudFront cache. Replaces
+# publish_to_s3.bash, which needed local AWS credentials and a media.env file.
+#
+# Credentials come from an assumed role via OIDC, so no long-lived AWS keys
+# are stored. Required repository secrets:
+#
+#   AWS_ROLE_TO_ASSUME  IAM role ARN trusting this repository
+#   AWS_BUCKET          bucket name, e.g. media.library.caltech.edu
+#   AWS_DISTRIBUTION    CloudFront distribution id
+#
+# NOTE ON --acl public-read: the CloudFront origin is the S3 *website*
+# endpoint with no Origin Access Control, so it fetches anonymously and the
+# objects must be publicly readable. The bucket has no bucket policy, so that
+# public read comes entirely from per-object ACLs. Drop these flags only after
+# a bucket policy granting public s3:GetObject is in place -- otherwise every
+# uploaded file becomes unreachable through the CDN.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'List what would be uploaded without uploading'
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: publish-cdn
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-west-2
+  PREFIX: cl-webcomponents
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Bundle components
+        run: |
+          deno task build
+          ls -la dist/
+
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload component bundles
+        run: |
+          aws s3 cp dist/ "s3://${{ secrets.AWS_BUCKET }}/${PREFIX}/" \
+            --recursive --exclude "*" --include "*.js" \
+            --acl public-read \
+            --content-type "text/javascript; charset=utf-8" \
+            ${{ inputs.dry_run && '--dryrun' || '' }}
+
+      - name: Upload CSS
+        run: |
+          aws s3 cp css/ "s3://${{ secrets.AWS_BUCKET }}/${PREFIX}/css/" \
+            --recursive --exclude "*" --include "*.css" \
+            --acl public-read \
+            --content-type "text/css; charset=utf-8" \
+            ${{ inputs.dry_run && '--dryrun' || '' }}
+
+      - name: Invalidate CloudFront
+        if: ${{ !inputs.dry_run }}
+        run: |
+          # Scoped to this project's prefix. The old script invalidated /*,
+          # which flushed every other asset on the distribution too.
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.AWS_DISTRIBUTION }}" \
+            --paths "/${PREFIX}/*"
