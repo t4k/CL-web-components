@@ -88,11 +88,15 @@ deno test --allow-read
 
 A few conventions worth knowing before you open a pull request:
 
-- **Generated files are not committed.** `CITATION.cff` and `src/version.js`
-  come from `codemeta.json`; the website and the bundles are built by CI. Edit
-  the source, not the output.
-- **This README is hand-written.** So is everything in `docs/`. Neither is
-  generated, so your prose will not be overwritten.
+- **Two tracked files are generated.** `CITATION.cff` and `src/version.js` are
+  derived from `codemeta.json` and rewritten by CI on every push to `main`.
+  They are in the repository so that GitHub and the bundles can read them, but
+  editing them directly does nothing lasting — your changes are overwritten on
+  the next run. Change `codemeta.json` instead.
+- **Build output is not tracked at all.** The bundles in `dist/` and the
+  rendered site in `_site/` are built fresh by CI and never committed.
+- **Everything else is hand-written**, including this README and all of
+  `docs/`. Nothing generates them, so your prose will not be overwritten.
 - Component naming follows
   [our conventions](https://caltechlibrary.github.io/CL-web-components/web_component_naming.html).
 
