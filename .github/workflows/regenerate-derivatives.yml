@@ -44,6 +44,38 @@ jobs:
       # `git log -n 1`, so it needs a git checkout -- depth 1 is enough.
       - uses: actions/checkout@v7
 
+      # The copyright year is not something that should be bumped every
+      # January. A notice names the year of first publication; adding a year
+      # is only meaningful when there is new copyrightable material, and it
+      # is a deliberate decision, not maintenance. So this does not rewrite
+      # anything -- it fails only when the two places that state the year
+      # disagree with each other, and otherwise just leaves a note.
+      - name: Check the copyright year
+        run: |
+          META="$(python3 -c "import json;print(json.load(open('codemeta.json'))['copyrightYear'])")"
+          LINE="$(grep -m1 -E '^Copyright' LICENSE.txt)"
+          FILE="$(echo "$LINE" | grep -oE '[0-9]{4}' | tail -n 1)"
+
+          if [ "$META" != "$FILE" ]; then
+            {
+              echo "### Copyright year mismatch"
+              echo
+              echo "| source | year |"
+              echo "|---|---|"
+              echo "| \`codemeta.json\` \`copyrightYear\` | $META |"
+              echo "| \`LICENSE.txt\` | $FILE |"
+              echo
+              echo "These must agree. Update whichever is wrong."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::copyright year disagrees: codemeta.json says $META, LICENSE.txt says $FILE"
+            exit 1
+          fi
+
+          NOW="$(date -u +%Y)"
+          if [ "$FILE" -lt "$NOW" ]; then
+            echo "::notice::Copyright year is $FILE and it is now $NOW. That is fine if there is no new copyrightable material this year; if there is, update LICENSE.txt and codemeta.json together."
+          fi
+
       - name: Cache cmt
         id: cache-cmt
         uses: actions/cache@v6
