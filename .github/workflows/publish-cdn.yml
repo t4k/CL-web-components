@@ -7,9 +7,12 @@ name: Publish components to CDN
 # Credentials come from an assumed role via OIDC, so no long-lived AWS keys
 # are stored. Required repository secrets:
 #
-#   AWS_ROLE_TO_ASSUME  IAM role ARN trusting this repository
-#   AWS_BUCKET          bucket name, e.g. media.library.caltech.edu
-#   AWS_DISTRIBUTION    CloudFront distribution id
+#   AWS_ROLE_TO_ASSUME_ARN  full IAM role ARN trusting this repository,
+#                           e.g. arn:aws:iam::<account-id>:role/<RoleName>.
+#                           A bare role name is not enough -- the action
+#                           errors with "Source Account ID is needed".
+#   AWS_BUCKET_NAME         bucket name, e.g. media.library.caltech.edu
+#   AWS_DISTRIBUTION_ID     CloudFront distribution id
 #
 # NOTE ON --acl public-read: the CloudFront origin is the S3 *website*
 # endpoint with no Origin Access Control, so it fetches anonymously and the
@@ -58,12 +61,12 @@ jobs:
       - name: Assume AWS role
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Upload component bundles
         run: |
-          aws s3 cp dist/ "s3://${{ secrets.AWS_BUCKET }}/${PREFIX}/" \
+          aws s3 cp dist/ "s3://${{ secrets.AWS_BUCKET_NAME }}/${PREFIX}/" \
             --recursive --exclude "*" --include "*.js" \
             --acl public-read \
             --content-type "text/javascript; charset=utf-8" \
@@ -71,7 +74,7 @@ jobs:
 
       - name: Upload CSS
         run: |
-          aws s3 cp css/ "s3://${{ secrets.AWS_BUCKET }}/${PREFIX}/css/" \
+          aws s3 cp css/ "s3://${{ secrets.AWS_BUCKET_NAME }}/${PREFIX}/css/" \
             --recursive --exclude "*" --include "*.css" \
             --acl public-read \
             --content-type "text/css; charset=utf-8" \
@@ -83,5 +86,5 @@ jobs:
           # Scoped to this project's prefix. The old script invalidated /*,
           # which flushed every other asset on the distribution too.
           aws cloudfront create-invalidation \
-            --distribution-id "${{ secrets.AWS_DISTRIBUTION }}" \
+            --distribution-id "${{ secrets.AWS_DISTRIBUTION_ID }}" \
             --paths "/${PREFIX}/*"
