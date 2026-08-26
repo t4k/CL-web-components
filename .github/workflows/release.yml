@@ -1,4 +1,5 @@
 name: Draft release
+run-name: Draft release — ${{ inputs.version || format('{0} bump', inputs.bump) }}
 
 # The human does two things: run this workflow with a bump type, then review
 # and publish the draft it produces. Everything between is mechanical.
@@ -72,6 +73,12 @@ jobs:
           fi
 
           echo "::notice::$CURRENT -> $NEXT (${{ inputs.bump }})"
+          echo "### Draft release \`v$NEXT\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| | |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| current | \`$CURRENT\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| next | \`$NEXT\` |" >> "$GITHUB_STEP_SUMMARY"
 
           if gh release view "v$NEXT" >/dev/null 2>&1; then
             echo "::error::v$NEXT already exists"; exit 1

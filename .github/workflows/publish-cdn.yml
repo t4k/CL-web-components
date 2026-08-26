@@ -1,4 +1,5 @@
 name: Publish components to CDN
+run-name: Publish to CDN${{ inputs.dry_run && ' (dry run)' || '' }}
 
 # Uploads the built component bundles and CSS to the S3 bucket behind
 # media.library.caltech.edu, then invalidates the CloudFront cache. Replaces
