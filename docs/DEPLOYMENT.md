@@ -6,38 +6,51 @@ This guide explains how to deploy **CL-web-components** depending on what change
 
 # Prerequisites
 
-A `media.env` file must exist in the project root before deploying to S3.
+None for documentation changes.
 
-It must contain:
+CDN deployment runs in GitHub Actions using an assumed AWS role, configured
+through these repository secrets:
 
 ```
-BUCKET_NAME
-BASE_URL
-DISTRIBUTION_ID
+AWS_ROLE_TO_ASSUME
+AWS_BUCKET
+AWS_DISTRIBUTION
 ```
 
-This file is included in gitignore and is **not committed to git**.
+No local AWS credentials and no `media.env` file are needed.
 
 ---
   
 # Deploy Documentation Changes
 
-  
 Use this workflow when **only documentation (`.md`) files have changed**.
 
-## Step 1. Edit and push
+Documentation is published automatically. Pushing to `main` triggers the
+`.github/workflows/docs.yml` GitHub Actions workflow, which
+runs Pandoc over every `*.md` file, rebuilds the Pagefind search index, and
+deploys the result straight to GitHub Pages. There is no `gh-pages` branch and
+no publishing script to run.
 
-Edit the Markdown, then commit and push:
+## Step 1. Preview (optional)
+
+The site is built entirely by `.github/workflows/docs.yml`. Pandoc renders
+every `docs/*.md` page plus the cmt-generated Markdown at the repository root,
+the demo pages and runtime assets are copied in, and Pagefind rebuilds the
+search index.
+
+Opening a pull request builds the site without publishing it. The run's
+`github-pages` artifact is the exact site that would be deployed, so
+downloading it is the most accurate preview available.
+
+To check a single page locally:
 
 ```bash
-git add <filename>
-git commit -m "your commit message"
-git push
+pandoc --metadata title=user_manual -s --to html5 docs/user_manual.md \
+  -o /tmp/user_manual.html \
+  --lua-filter=pandoc/links-to-html.lua \
+  --lua-filter=pandoc/add-col-scope.lua \
+  --template=pandoc/page.tmpl
 ```
-
-There is no HTML to build by hand. The **Build and deploy docs** workflow
-renders every `*.md` with Pandoc, rebuilds the Pagefind index, and publishes
-to GitHub Pages on every push to `main`.
 
 Documentation sources live in `docs/`. The files `cmt` generates into the
 repository root -- `README.md`, `about.md` and `INSTALL.md` -- are rendered
@@ -45,160 +58,105 @@ from there, because `cmt` can only write to the root. The Pandoc template and
 filters live in `pandoc/`. `llm_notes/` stays in the repository but is not
 published.
 
-## Step 2. Confirm the deployment
+## Step 2. Save and push your working branch
 
-Watch the run finish under the repository's **Actions** tab, or from the
-command line:
+If you added **new files**, stage them first:
+
+```bash
+git add <filename>
+```
+
+Then commit and push:
+
+```bash
+git commit -m "your commit message"
+git push
+```
+
+## Step 3. Confirm the deployment
+
+Once your change is on `main`, watch the run finish under the repository's
+**Actions** tab, or from the command line:
 
 ```bash
 gh run watch
 ```
 
-The site updates at <https://caltechlibrary.github.io/CL-web-components/> when
-the workflow completes, typically within a minute.
-
-Pull requests build the site but do not publish it, so a change that breaks
-the docs fails in review rather than after merge.
+The site updates at <https://caltechlibrary.github.io/CL-web-components/> when the
+workflow completes, typically within a minute.
 
 ---
-  
+
 # Deploy Updated Web Component Code
-  
-  
-Use this workflow when **component code in `src/` has changed** and needs to be deployed to the CDN.
 
+Use this workflow when **component code in `src/` has changed** and needs to be
+deployed to the CDN.
 
-## Step 1. Build compiled JavaScript
+## Step 1. Edit and push
 
-```bash
-make build
-```
-
-This command runs `deno task build` and bundles:
-
-- `src/*.js` > matching root-level `.js` files
-- `mod.js` > `cl-web-components.js` (combined build)
-
-## Step 2. Preview the S3 upload (optional)
+Edit the component under `src/`, then commit and push:
 
 ```bash
-./publish_to_s3.bash dry-run
+git commit -m "your commit message"
+git push
 ```
 
-This shows which files will be uploaded without making changes.
+The bundles are build output. They are compiled by CI into `dist/`, which is
+gitignored, so there is nothing to rebuild or commit by hand.
 
-## Step 3. Save and push your working branch
+## Step 2. Publish to the CDN
 
-If you added **new files**, stage them first:
+The **Publish components to CDN** workflow runs automatically when a GitHub
+release is published. To push the current `main` without cutting a release,
+run it manually from the Actions tab -- it accepts a `dry_run` option that
+lists what would be uploaded without uploading it.
 
-```bash
-git add <filename>
-```
-
-Then commit and push:
-
-```bash
-make save msg="your commit message"
-```
-
-> `make save` uses `git commit -am` which only commits already-tracked files. New files must be staged with `git add` first.
-
-## Step 4. Deploy to S3 and refresh the CDN
-
-```bash
-./publish_to_s3.bash
-```
-
-This script:
-
-- Uploads root `*.js` and `css/*.css` files
-- Places them under `/cl-webcomponents/` in the S3 bucket
-- Creates a **CloudFront cache invalidation** so the CDN serves the new files
-
-The documentation site redeploys on its own when the push lands on `main`.
+The workflow bundles the components, uploads them and `css/*.css` under
+`/cl-webcomponents/` in the bucket, and invalidates the CloudFront cache for
+that prefix.
 
 ---
-   
-# Deploy a New Release  
 
-Use this workflow when creating a **versioned GitHub release**.
+# Deploy a New Release
 
-## Step 1. Update release metadata
+You do two things: choose how the version increments, and approve the draft.
 
-Edit `codemeta.json` and update:
+## Step 1. Run the release workflow
 
-- Version number
-- Release notes
-
-## Step 2. Build compiled output
+From the Actions tab, run **Draft release** and pick `patch`, `minor` or
+`major`. From the command line:
 
 ```bash
-make build
+gh workflow run release.yml -f bump=patch
 ```
 
-This command also regenerates several files from `codemeta.json`:
+There is an optional `version` input for the rare case where you need an exact
+number rather than an increment.
 
-- `README.md`
-- `version.js`
-- `CITATION.cff`
-- `about.md`
+The workflow works out the next version from `codemeta.json`, then makes a
+single commit containing the bumped `codemeta.json`, the regenerated
+`README.md`, `CITATION.cff` and `about.md`, and a stamped `src/version.js`. It
+tags that commit, builds the bundles and the zip, and opens a **draft**
+release.
 
-## Step 3. Build the distribution bundle
+Everything lands in one commit, so the tag can never point at a half-updated
+tree.
+
+## Step 2. Write the notes and publish
+
+Open the draft, write the release notes in GitHub's editor -- it starts with
+the auto-generated commit list -- and publish:
 
 ```bash
-make dist
+gh release view --web
 ```
 
-This command:
+Publishing is the only manual step and the only irreversible one. It triggers
+**Publish components to CDN**, which uploads the bundles to
+`media.library.caltech.edu` and invalidates the CloudFront cache.
 
-- Bundles files into `dist/`
-- Copies documentation files:
-  - `INSTALL.md`
-  - `README.md`
-  - `about.md`
-  - `codemeta.json`
-  - `CITATION.cff`
-  - `LICENSE`
-- Creates a release archive:
-
-```
-cl-web-components-<version>.zip
-```
-
-## Step 4. Save and push your working branch
-
-If you added **new files**, stage them first:
-
-```bash
-git add <filename>
-```
-
-Then commit and push:
-
-```bash
-make save msg="your commit message"
-```
-
-> `make save` uses `git commit -am` which only commits already-tracked files. New files must be staged with `git add` first.
-
-## Step 5. Create a draft GitHub release
-
-```bash
-./release.bash
-```
-
-This script:
-
-- Reads the version and release notes from `codemeta.json`
-- Commits changes
-- Creates a **draft GitHub release** using the `gh` CLI
-- Uploads the `.zip` archive
-
-## Step 6. Publish the release
-
-Open the GitHub releases page and publish the draft:
-
-https://github.com/caltechlibrary/CL-web-components/releases
+`codemeta.json` records the release URL in `releaseNotes` rather than a copy of
+the prose, so the notes live in exactly one place.
 
 ---
 
@@ -208,12 +166,8 @@ https://github.com/caltechlibrary/CL-web-components/releases
 |-----|---------|
 | Compile source code | `make build` |
 | Save and push working branch | `make save msg="your message"` |
-| Deploy the docs site | Automatic on push to `main` (Actions -> Build and deploy docs) |
-| Preview S3 deployment | `./publish_to_s3.bash dry-run` |
-| Deploy JS to S3 and invalidate CDN cache | `./publish_to_s3.bash` |
-| Invalidate CDN cache only | `./invalidate_cdn.bash` |
-| Build distribution bundle | `make dist` |
-| Create GitHub release | `./release.bash` |
+| Deploy components to the CDN | Actions -> Publish components to CDN |
+| Cut a release | `gh workflow run release.yml -f bump=patch`, then publish the draft |
 
 ---
 

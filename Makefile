@@ -53,7 +53,6 @@ CITATION.cff: codemeta.json
 about.md: codemeta.json $(PROGRAMS)
 	cmt codemeta.json about.md
 
-
 status:
 	git status
 
@@ -72,19 +71,5 @@ clean:
 	-rm *.bak >/dev/null
 	@if [ -d dist ]; then rm -fR dist; fi
 	@if [ -d testout ]; then rm -fR testout; fi
-
-dist: build .FORCE
-	@rm -fR dist/* >/dev/null 
-	deno task release
-	cp INSTALL.md dist/
-	cp LICENSE dist/
-	cp about.md dist/
-	cp README.md dist/
-	cp codemeta.json dist/
-	cp CITATION.cff dist/
-	cd dist && zip cl-web-components-$(VERSION).zip *.md LICENSE CITATION.cff codemeta.json $(WEB_COMPONENTS) cl-web-components.js
-
-release: dist
-	@printf "\nReady to do ./release.bash\n\n"
 
 .FORCE:
