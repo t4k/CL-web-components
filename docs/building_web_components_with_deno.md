@@ -19,24 +19,21 @@ deno task build
 
 ## Building CL-web-components
 
-The process to build a release is a little more complex than is convenient for a Deno task. If your are on macOS or Linux you can use GNU Make to run the Makefile.
-
+Component bundles are built with a Deno task:
 
 ~~~shell
-make build
-make release
+deno task build
 ~~~
+
+That writes the bundles into `dist/`, which is gitignored. You rarely need to
+run it by hand: GitHub Actions builds the bundles for the documentation site,
+for the CDN upload and for the release zip.
 
 The documentation website is built and deployed by GitHub Actions, so there is
-no local website step.
+no local website step either.
 
-On Windows you can use the related PowerShell scripts that replace make. Example,
+Releases are cut from `codemeta.json` -- bump `version`, write `releaseNotes`,
+push, then publish the draft release that appears. See [DEPLOYMENT](DEPLOYMENT.md).
 
-~~~pwsh
-make.ps1 build
-make.ps1 release
-~~~
-
-The "release" option makes the zip files needed for a GitHub release. If you are on macOS or Linux you can run the `./replace.bash` script to perform those chores if you have `gh` installed.
-
-NOTE: The bundled JavaScript files are in the root directory. The source are in the `src` directory. If you need to fix something, add something, etc. It should go in the `src/` directory. You may need to either add or edit the tasks in `deno.json`, `Makefile` or `make.ps1`.
+NOTE: the sources are in `src/`. Fixes and additions go there. The bundles in
+`dist/` are build output and are never committed.
