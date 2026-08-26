@@ -124,7 +124,9 @@ function get_mimetype() {
 # Copy specific file over based on path provided
 function copy_file() {
 	FNAME="$1"
-	T_PATH="/cl-webcomponents/${FNAME}"
+	# Optional second argument is the path under /cl-webcomponents/; bundles
+	# are built into dist/ but published at the CDN root.
+	T_PATH="/cl-webcomponents/${2:-$1}"
 	TARGET="${BUCKET_NAME}${T_PATH}"
 	MIME_TYPE="$(get_mimetype "${FNAME}")"
 	echo "$(date) Coping from $FNAME with '${MIME_TYPE}' to ${TARGET}"
@@ -155,8 +157,8 @@ function invalidate_cdn() {
 
 function copy_javascript_files() {
 	# shellcheck disable=SC2012
-	ls -1 *.js | while read -r FNAME; do
-		copy_file "${FNAME}"
+	ls -1 dist/*.js | while read -r FPATH; do
+		copy_file "${FPATH}" "$(basename "${FPATH}")"
 	done;
 }
 

@@ -27,7 +27,10 @@ function Generate-Readme {
 }
 
 function Generate-VersionJs {
+    # cmt can only write to the repository root; src/version.js is the
+    # file mod.js imports and the one that gets bundled.
     cmt codemeta.json version.js
+    Move-Item -Force version.js src/version.js
 }
 
 function Generate-Citation {
