@@ -8,9 +8,11 @@ run-name: Draft release — ${{ inputs.version || format('{0} bump', inputs.bump
 # "Regenerate derivatives" and nothing else, so a release is never a side
 # effect of touching a file.
 #
-# Everything this changes lands in ONE commit -- the bumped codemeta.json, the
-# regenerated derivatives and the stamped src/version.js -- and the tag points
-# at that commit. There is no window in which the tree is half updated.
+# Everything this changes lands in ONE commit -- the bumped codemeta.json and
+# the regenerated derivatives -- and the tag points at that commit. There is no
+# window in which the tree is half updated. src/version.js is not part of it:
+# `deno task build` generates it after the commit, so the hash it records is
+# the tagged commit itself.
 #
 # The release prose is written in GitHub's release editor at approval time.
 # codemeta.json records the release URL instead, which is predictable from the
