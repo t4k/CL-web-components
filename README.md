@@ -26,11 +26,11 @@ The following are the components currently provided.
 
 ## Release Notes
 
-- version: 0.0.18
+- version: 0.1.0
 - status: wip
 - released: 2026-08-26
 
-https://github.com/t4k/CL-web-components/releases/tag/v0.0.18
+https://github.com/t4k/CL-web-components/releases/tag/v0.1.0
 
 
 ### Authors
