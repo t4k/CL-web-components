@@ -20,13 +20,19 @@ on:
   workflow_dispatch:
     inputs:
       bump:
-        description: 'Which part of the version to increment'
+        description: |
+          Which part of the version to increment ·
+          Major: breaking changes to attributes, slots or exports ·
+          Minor: new components or backward-compatible behaviour ·
+          Patch: bug fixes, styling and internal changes
         type: choice
         options: [patch, minor, major]
         default: patch
         required: true
       version:
-        description: 'Override: set an exact version (leave blank to use the bump)'
+        description: |
+          Override: an exact version such as 1.0.0 ·
+          Leave blank to use the bump above
         type: string
         required: false
 
