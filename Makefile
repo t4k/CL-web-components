@@ -53,9 +53,6 @@ CITATION.cff: codemeta.json
 about.md: codemeta.json $(PROGRAMS)
 	cmt codemeta.json about.md
 
-website: .FORCE
-	make -f website.mak
-
 status:
 	git status
 
@@ -66,9 +63,6 @@ save:
 refresh:
 	git fetch origin
 	git pull origin $(BRANCH)
-
-publish: website .FORCE
-	./publish.bash
 
 clean:
 	-rm *.bak >/dev/null

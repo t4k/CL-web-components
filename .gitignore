@@ -9,6 +9,10 @@ bin/
 dist/
 scratch/
 
+# Generated documentation
+# The docs workflow assembles the published site here.
+/_site/
+
 # macOS system files
 .DS_Store
 

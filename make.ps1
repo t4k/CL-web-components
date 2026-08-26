@@ -38,11 +38,6 @@ function Generate-About {
     cmt codemeta.json about.md
 }
 
-function Website {
-    & .\website.ps1 clean
-    & .\website.ps1 build
-}
-
 function Status {
     git status
 }
@@ -56,11 +51,6 @@ function Save {
 function Refresh {
     git fetch origin
     git pull origin $BRANCH
-}
-
-function Publish {
-    Website
-    .\publish.bash
 }
 
 function Clean {
@@ -101,11 +91,9 @@ switch ($args[0]) {
     "version.js" { Generate-VersionJs }
     "CITATION.cff" { Generate-Citation }
     "about.md" { Generate-About }
-    "website" { Website }
     "status" { Status }
     "save" { Save $args[1] }
     "refresh" { Refresh }
-    "publish" { Publish }
     "clean" { Clean }
     "dist" { Dist }
     "release" { Release }

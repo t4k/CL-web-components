@@ -22,19 +22,20 @@ This file is included in gitignore and is **not committed to git**.
   
 # Deploy Documentation Changes
 
-  
 Use this workflow when **only documentation (`.md`) files have changed**.
 
-## Step 1. Convert mardown files to html files
+Documentation is published automatically. Pushing to `main` triggers the
+[Build and deploy docs](.github/workflows/docs.yml) GitHub Actions workflow, which
+runs Pandoc over every `*.md` file, rebuilds the Pagefind search index, and
+deploys the result straight to GitHub Pages. There is no `gh-pages` branch and
+no publishing script to run.
 
-```bash
-make website
-```
+## Step 1. Preview (optional)
 
-This command:
-
-- Converts all `*.md` files to `*.html` using **Pandoc**
-- Rebuilds the **Pagefind search index**
+The site is built entirely by `.github/workflows/docs.yml`, so opening a pull
+request builds it without publishing. That run's `github-pages` artifact is the
+exact site that would be deployed, which makes it the most accurate preview
+available.
 
 ## Step 2. Save and push your working branch
 
@@ -50,37 +51,25 @@ Then commit and push:
 make save msg="your commit message"
 ```
 
-`make save` uses `git commit -am` which only commits already-tracked files. New files must be staged with `git add` first.
+> `make save` uses `git commit -am` which only commits already-tracked files. New files must be staged with `git add` first.
 
-## Step 3. Publish html files to GitHub Pages
+## Step 3. Confirm the deployment
+
+Once your change is on `main`, watch the run finish under the repository's
+**Actions** tab, or from the command line:
 
 ```bash
-./publish.bash
+gh run watch
 ```
 
-This script will prompt you:
-
-```
-You're in main branch
-You need to pull in changes to the gh-pages branch to publish
-process Y/n
-```
-
-Enter `y` to proceed. 
-
-It will:
-
-- Merge your current branch into `gh-pages`
-- Push the update to GitHub Pages
-- Switch you back to your working branch
+The site updates at <https://caltechlibrary.github.io/CL-web-components/> when the
+workflow completes, typically within a minute.
 
 ---
-  
-# Deploy Updated Web Component Code
-  
-  
-Use this workflow when **component code in `src/` has changed** and needs to be deployed to the CDN.
 
+# Deploy Updated Web Component Code
+
+Use this workflow when **component code in `src/` has changed** and needs to be deployed to the CDN.
 
 ## Step 1. Build compiled JavaScript
 
@@ -101,13 +90,7 @@ This command runs `deno task build` and bundles:
 
 This shows which files will be uploaded without making changes.
 
-## Step 3. Build the documentation website
-
-```bash
-make website
-```
-
-## Step 4. Save and push your working branch
+## Step 3. Save and push your working branch
 
 If you added **new files**, stage them first:
 
@@ -123,7 +106,9 @@ make save msg="your commit message"
 
 > `make save` uses `git commit -am` which only commits already-tracked files. New files must be staged with `git add` first.
 
-## Step 5. Deploy to S3 and refresh the CDN
+Pushing to `main` also rebuilds and redeploys the documentation site automatically.
+
+## Step 4. Deploy to S3 and refresh the CDN
 
 ```bash
 ./publish_to_s3.bash
@@ -135,24 +120,8 @@ This script:
 - Places them under `/cl-webcomponents/` in the S3 bucket
 - Creates a **CloudFront cache invalidation** so the CDN serves the new files
 
-## Step 6. Publish html files to GitHub Pages
-
-```bash
-./publish.bash
-```
-
-This script will prompt you:
-
-```
-You're in main branch
-You need to pull in changes to the gh-pages branch to publish
-process Y/n
-```
-
-Enter `y` to proceed.
-
 ---
-   
+
 # Deploy a New Release  
 
 Use this workflow when creating a **versioned GitHub release**.
@@ -241,9 +210,8 @@ https://github.com/caltechlibrary/CL-web-components/releases
 | Task | Command |
 |-----|---------|
 | Compile source code | `make build` |
-| Build documentation website | `make website` |
+| Preview documentation website locally | `make website` |
 | Save and push working branch | `make save msg="your message"` |
-| Publish docs to GitHub Pages | `./publish.bash` |
 | Preview S3 deployment | `./publish_to_s3.bash dry-run` |
 | Deploy JS to S3 and invalidate CDN cache | `./publish_to_s3.bash` |
 | Invalidate CDN cache only | `./invalidate_cdn.bash` |
