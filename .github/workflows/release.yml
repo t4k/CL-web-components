@@ -21,10 +21,10 @@ on:
     inputs:
       bump:
         description: |
-          Which part of the version to increment ·
-          Major: breaking changes to attributes, slots or exports ·
-          Minor: new components or backward-compatible behaviour ·
-          Patch: bug fixes, styling and internal changes
+          Which part of the version to increment? ·
+          Major: breaking changes, consumers must adapt ·
+          Minor: new features, backward compatible ·
+          Patch: bug fixes, backward compatible
         type: choice
         options: [patch, minor, major]
         default: patch
