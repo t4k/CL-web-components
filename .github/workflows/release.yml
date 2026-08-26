@@ -31,7 +31,8 @@ on:
         required: true
       version:
         description: |
-          Override: an exact version such as 1.0.0 ·
+          Override: an exact version, e.g. 0.2.0-alpha1 ·
+          For pre-releases and deliberate jumps the bump cannot express ·
           Leave blank to use the bump above
         type: string
         required: false
@@ -58,17 +59,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           CURRENT="$(jq -r .version codemeta.json)"
-          if ! printf '%s' "$CURRENT" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::codemeta.json version '$CURRENT' is not X.Y.Z"; exit 1
+          if ! printf '%s' "$CURRENT" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "::error::codemeta.json version '$CURRENT' is not valid semver"; exit 1
           fi
 
           OVERRIDE="${{ inputs.version }}"
           if [ -n "$OVERRIDE" ]; then
-            if ! printf '%s' "$OVERRIDE" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-              echo "::error::override version '$OVERRIDE' is not X.Y.Z"; exit 1
+            # Full semver, so pre-releases and build metadata are allowed here
+            # even though the bump arithmetic cannot produce them.
+            if ! printf '%s' "$OVERRIDE" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+              echo "::error::override version '$OVERRIDE' is not valid semver"; exit 1
             fi
             NEXT="$OVERRIDE"
           else
+            # Bash arithmetic treats an unset identifier as 0, so bumping from
+            # e.g. 0.2.0-alpha1 would silently compute 0.2.1 rather than fail.
+            if ! printf '%s' "$CURRENT" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::codemeta.json version '$CURRENT' is a pre-release; use the version override to say exactly what comes next"
+              exit 1
+            fi
             IFS=. read -r MA MI PA <<< "$CURRENT"
             case "${{ inputs.bump }}" in
               major) MA=$((MA+1)); MI=0; PA=0 ;;
@@ -154,8 +163,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          PRERELEASE=""
+          case "${{ steps.v.outputs.version }}" in *-*) PRERELEASE="--prerelease" ;; esac
           gh release create "${{ steps.v.outputs.tag }}" \
-            --draft \
+            --draft $PRERELEASE \
             --title "${{ steps.v.outputs.tag }}" \
             --generate-notes \
             --target "${{ steps.prep.outputs.sha }}" \
