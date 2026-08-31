@@ -1,23 +1,15 @@
-name: Build and deploy docs
+name: Docs
 
-# Builds the documentation site and publishes it to GitHub Pages: no
-# `gh-pages` branch, no `publish.bash`, no merge prompt.
+# The rendering logic lives in caltechlibrary/workflows, so a fix there reaches
+# every Caltech Library site without editing this file.
 #
-# The build lives here rather than in a website.mak on purpose. CMTools
-# generates website.mak and renders ./*.md beside its sources, so keeping the
-# build there would mean a `cmt` run could silently revert this layout.
-# Nothing in this repository reads website.mak, so it can be regenerated
-# freely without affecting the published site.
+# This calls the render-site action rather than the whole docs.yml reusable
+# workflow, because the site publishes compiled bundles and a reusable workflow
+# gives the caller no way to add a Deno setup step. Everything except the
+# toolchain and the Pages plumbing is still shared.
 #
-# The same applies to pandoc/. cmt generates page.tmpl, links-to-html.lua and
-# add-col-scope.lua into the repository root; this build reads the copies in
-# pandoc/, so any root copies a `cmt` run leaves behind are inert.
-#
-# Pull requests run the build but skip the deploy, so a change that breaks
-# the docs build fails in review rather than after merge.
-#
-# NOTE: this only takes effect once a repo admin sets
-# Settings -> Pages -> Source to "GitHub Actions".
+# NOTE: pinned to t4k/workflows@main while the shared repository is being proved
+# out. This becomes caltechlibrary/workflows@v1.
 
 on:
   push:
@@ -30,31 +22,15 @@ permissions:
   pages: write
   id-token: write
 
-# Allow one concurrent deployment, and let a running one finish.
 concurrency:
   group: pages
   cancel-in-progress: false
-
-env:
-  # Pinned so CI output matches the HTML currently committed to the repo.
-  PANDOC_VERSION: 3.8.2.1
-  PAGEFIND_VERSION: 1.5.2
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - name: Install Pandoc
-        run: |
-          curl -fsSL -o /tmp/pandoc.deb \
-            "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb"
-          sudo dpkg -i /tmp/pandoc.deb
-          pandoc --version | head -n 1
-
-      - name: Install Pagefind
-        run: npm install -g "pagefind@${PAGEFIND_VERSION}"
 
       - uses: denoland/setup-deno@v2
         with:
@@ -63,49 +39,18 @@ jobs:
       - name: Bundle components
         run: deno task build
 
-      - name: Render Markdown
-        run: |
-          mkdir -p _site
-          # Only docs/ is published. The root README.md is written for people
-          # browsing the repository on GitHub; docs/README.md is the site's
-          # home page and becomes index.html.
-          for SRC in docs/*.md; do
-            BASE="$(basename "$SRC" .md)"
-            OUT="_site/$BASE.html"
-            TITLE="$BASE"
-            if [ "$BASE" = "README" ]; then OUT="_site/index.html"; TITLE="Home"; fi
-            echo "$SRC -> $OUT"
-            pandoc --metadata title="$TITLE" -s --to html5 "$SRC" -o "$OUT" \
-              --lua-filter=pandoc/links-to-html.lua \
-              --lua-filter=pandoc/add-col-scope.lua \
-              --template=pandoc/page.tmpl
-          done
-
-      - name: Copy pages and assets
-        run: |
-          cp -p docs/demo_*.html docs/*test*.html _site/
-          # dist/*.js are the freshly built bundles; mod.js is the documented
-          # ES module entry point and imports from src/, which is copied too.
-          cp -p dist/*.js mod.js LICENSE.txt _site/
-          cp -Rp css src _site/
-
-      - name: Build search index
-        run: |
-          pagefind --site _site --force-language en-US \
-            --exclude-selectors "nav,header,footer" | tee /tmp/pagefind.log
-
-      - name: Summarise the build
-        run: |
-          INDEXED="$(grep -oE 'Indexed [0-9]+ pages' /tmp/pagefind.log | grep -oE '[0-9]+' || echo '?')"
-          {
-            echo "### Site built"
-            echo
-            echo "| | |"
-            echo "|---|---|"
-            echo "| pages rendered | $(find _site -name '*.html' | wc -l | tr -d ' ') |"
-            echo "| pages indexed | $INDEXED |"
-            echo "| total files | $(find _site -type f | wc -l | tr -d ' ') |"
-          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: t4k/workflows/.github/actions/render-site@main
+        with:
+          template: pandoc/page.tmpl
+          lua-filters: |
+            pandoc/links-to-html.lua
+            pandoc/add-col-scope.lua
+          include: |
+            dist/*.js
+            mod.js
+            LICENSE.txt
+            css
+            src
 
       - uses: actions/upload-pages-artifact@v5
         with:
@@ -113,7 +58,6 @@ jobs:
 
   deploy:
     needs: build
-    # Pull requests build but do not publish.
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
@@ -122,6 +66,3 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
-
-      - name: Summarise the deployment
-        run: echo "Deployed to ${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
