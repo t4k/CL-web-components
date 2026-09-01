@@ -1,26 +1,19 @@
 name: Publish components to CDN
-run-name: Publish to CDN${{ inputs.dry_run && ' (dry run)' || '' }}
 
-# Uploads the built component bundles and CSS to the S3 bucket behind
-# media.library.caltech.edu, then invalidates the CloudFront cache. Replaces
-# publish_to_s3.bash, which needed local AWS credentials and a media.env file.
+# Uploads the built component bundles and CSS to media.library.caltech.edu and
+# invalidates the CloudFront paths for this project.
 #
-# Credentials come from an assumed role via OIDC, so no long-lived AWS keys
-# are stored. Required repository secrets:
+# Replaces publish_to_s3.bash and invalidate_cdn.bash, which needed an
+# uncommitted media.env to exist on someone's machine and invalidated /* rather
+# than this project's own prefix.
 #
-#   AWS_ROLE_TO_ASSUME_ARN  full IAM role ARN trusting this repository,
-#                           e.g. arn:aws:iam::<account-id>:role/<RoleName>.
-#                           A bare role name is not enough -- the action
-#                           errors with "Source Account ID is needed".
-#   AWS_BUCKET_NAME         bucket name, e.g. media.library.caltech.edu
-#   AWS_DISTRIBUTION_ID     CloudFront distribution id
+# Authentication is OIDC, so no long-lived AWS keys exist anywhere. The role's
+# trust policy names this repository's subject claim:
 #
-# NOTE ON --acl public-read: the CloudFront origin is the S3 *website*
-# endpoint with no Origin Access Control, so it fetches anonymously and the
-# objects must be publicly readable. The bucket has no bucket policy, so that
-# public read comes entirely from per-object ACLs. Drop these flags only after
-# a bucket policy granting public s3:GetObject is in place -- otherwise every
-# uploaded file becomes unreachable through the CDN.
+#   repo:caltechlibrary@15038637/CL-web-components@943425900:ref:refs/heads/main
+#
+# Run it with dry_run first. It reports what would be uploaded and invalidated
+# without changing anything.
 
 on:
   release:
@@ -28,21 +21,22 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'List what would be uploaded without uploading'
+        description: "Report what would happen without uploading or invalidating"
         type: boolean
-        default: false
+        default: true
+
+run-name: >-
+  Publish to CDN${{ github.event_name == 'workflow_dispatch' && inputs.dry_run
+  && ' (dry run)' || '' }}
 
 permissions:
-  id-token: write
   contents: read
+  # Required for OIDC. A composite action cannot declare this.
+  id-token: write
 
 concurrency:
   group: publish-cdn
   cancel-in-progress: false
-
-env:
-  AWS_REGION: us-west-2
-  PREFIX: cl-webcomponents
 
 jobs:
   publish:
@@ -54,57 +48,16 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Bundle components
-        run: |
-          deno task build
-          ls -la dist/
+      - name: Build the bundles
+        run: deno task build
 
-      - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v6
+      - uses: caltechlibrary/workflows/.github/actions/publish-cdn@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Upload component bundles
-        run: |
-          aws s3 cp dist/ "s3://${{ secrets.AWS_BUCKET_NAME }}/${PREFIX}/" \
-            --recursive --exclude "*" --include "*.js" \
-            --acl public-read \
-            --content-type "text/javascript; charset=utf-8" \
-            ${{ inputs.dry_run && '--dryrun' || '' }}
-
-      - name: Upload CSS
-        run: |
-          aws s3 cp css/ "s3://${{ secrets.AWS_BUCKET_NAME }}/${PREFIX}/css/" \
-            --recursive --exclude "*" --include "*.css" \
-            --acl public-read \
-            --content-type "text/css; charset=utf-8" \
-            ${{ inputs.dry_run && '--dryrun' || '' }}
-
-      - name: Invalidate CloudFront
-        if: ${{ !inputs.dry_run }}
-        id: invalidate
-        run: |
-          # Scoped to this project's prefix. The old script invalidated /*,
-          # which flushed every other asset on the distribution too.
-          ID="$(aws cloudfront create-invalidation \
-            --distribution-id "${{ secrets.AWS_DISTRIBUTION_ID }}" \
-            --paths "/${PREFIX}/*" --query 'Invalidation.Id' --output text)"
-          echo "id=$ID" >> "$GITHUB_OUTPUT"
-
-      - name: Summarise the upload
-        if: always()
-        run: |
-          {
-            if [ "${{ inputs.dry_run }}" = "true" ]; then
-              echo "### Dry run — nothing was uploaded"
-            else
-              echo "### Published to the CDN"
-            fi
-            echo
-            echo "| | |"
-            echo "|---|---|"
-            echo "| bundles | $(ls -1 dist/*.js 2>/dev/null | wc -l | tr -d ' ') |"
-            echo "| prefix | \`/${PREFIX}/\` |"
-            echo "| invalidation | \`${{ steps.invalidate.outputs.id || 'skipped' }}\` |"
-          } >> "$GITHUB_STEP_SUMMARY"
+          bucket: ${{ secrets.AWS_BUCKET_NAME }}
+          distribution-id: ${{ secrets.AWS_DISTRIBUTION_ID }}
+          prefix: cl-webcomponents
+          sources: |
+            dist
+            css
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
