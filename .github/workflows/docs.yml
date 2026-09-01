@@ -1,0 +1,78 @@
+name: Docs
+
+# Builds the documentation site and publishes it to GitHub Pages, replacing
+# `make website` + `./publish.bash` + the `gh-pages` merge.
+#
+# The build itself lives in caltechlibrary/workflows, so a fix there reaches
+# this site — and every other Caltech Library site — on the next run, with
+# nothing written back into this repository.
+#
+# This calls the build action rather than the docs-pandoc.yml reusable
+# workflow, because the site publishes compiled component bundles and a
+# reusable workflow gives the caller nowhere to add a Deno setup step.
+#
+# The Pandoc Lua filters come from the shared repository. Both are identical to
+# the copies that used to live here, and one of them — add-col-scope.lua — was
+# referenced by website.mak but never committed, which is why `make website`
+# has failed on the first Markdown file since 69722fa.
+#
+# NOTE: this only takes effect once a repo admin sets
+# Settings -> Pages -> Source to "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Bundle components
+        run: deno task build
+
+      - uses: caltechlibrary/workflows/.github/actions/build-pandoc@v1
+        with:
+          docs-dir: docs
+          # Every Markdown file in the root is published today, including the
+          # ones cmt generates there. README becomes index.html.
+          extra-sources: "*.md"
+          template: pandoc/page.tmpl
+          include: |
+            dist/*.js
+            mod.js
+            LICENSE
+            css
+            src
+
+      - uses: caltechlibrary/workflows/.github/actions/index-site@v1
+
+      - uses: caltechlibrary/workflows/.github/actions/deploy-site@v1
+
+  deploy:
+    needs: build
+    # Pull requests build but do not publish.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
