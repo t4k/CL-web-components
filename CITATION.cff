@@ -49,7 +49,7 @@ repository-code: "https://github.com/caltechlibrary/CL-web-components"
 version: 0.0.16
 date-released: 2026-01-28
 
-license-url: "https://spdx.org/licenses/BSD-3-Clause"
+license-url: "https://caltechlibrary.github.io/CL-web-components/LICENSE.txt"
 keywords:
   - HTML
   - CSS
