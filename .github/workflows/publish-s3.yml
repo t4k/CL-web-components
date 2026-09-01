@@ -1,7 +1,8 @@
-name: Publish components to CDN
+name: Publish components to S3
 
-# Uploads the built component bundles and CSS to media.library.caltech.edu and
-# invalidates the CloudFront paths for this project.
+# Uploads the built component bundles and CSS to the media.library.caltech.edu
+# S3 bucket, then invalidates the CloudFront paths for this project so the
+# change is visible.
 #
 # Replaces publish_to_s3.bash and invalidate_cdn.bash, which needed an
 # uncommitted media.env to exist on someone's machine and invalidated /* rather
@@ -26,7 +27,7 @@ on:
         default: true
 
 run-name: >-
-  Publish to CDN${{ github.event_name == 'workflow_dispatch' && inputs.dry_run
+  Publish to S3${{ github.event_name == 'workflow_dispatch' && inputs.dry_run
   && ' (dry run)' || '' }}
 
 permissions:
@@ -35,7 +36,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: publish-cdn
+  group: publish-s3
   cancel-in-progress: false
 
 jobs:
@@ -51,7 +52,7 @@ jobs:
       - name: Build the bundles
         run: deno task build
 
-      - uses: caltechlibrary/workflows/.github/actions/publish-cdn@v1
+      - uses: caltechlibrary/workflows/.github/actions/publish-s3@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_ARN }}
           bucket: ${{ secrets.AWS_BUCKET_NAME }}
