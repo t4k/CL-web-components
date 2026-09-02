@@ -1,0 +1,28 @@
+name: Probe AWS permissions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_ARN }}
+          aws-region: us-west-2
+
+      - name: Is a published object readable at the S3 REST endpoint?
+        env:
+          BUCKET: ${{ secrets.AWS_BUCKET_NAME }}
+        run: |
+          URL="https://${BUCKET}.s3.us-west-2.amazonaws.com/cl-webcomponents/footer-global.js"
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "$URL")
+          echo "RESULT: rest endpoint returned $CODE"
+          URL2="https://${BUCKET}.s3.us-west-2.amazonaws.com/cl-webcomponents/does-not-exist.js"
+          CODE2=$(curl -s -o /dev/null -w '%{http_code}' "$URL2")
+          echo "RESULT: missing key returned $CODE2"
