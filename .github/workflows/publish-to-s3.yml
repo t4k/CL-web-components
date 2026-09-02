@@ -59,6 +59,10 @@ jobs:
           distribution-id: ${{ secrets.AWS_DISTRIBUTION_ID }}
           prefix: cl-webcomponents
           public-base-url: https://media.library.caltech.edu/cl-webcomponents/
+          # This bucket is in legacy ObjectWriter mode with no bucket policy,
+          # so public read comes from per-object ACLs. Without this, objects
+          # upload successfully and are unreadable.
+          acl: public-read
           sources: |
             dist
             css
