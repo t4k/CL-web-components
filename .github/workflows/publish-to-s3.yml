@@ -36,7 +36,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: publish-s3
+  group: publish-to-s3
   cancel-in-progress: false
 
 jobs:
@@ -52,12 +52,13 @@ jobs:
       - name: Build the bundles
         run: deno task build
 
-      - uses: caltechlibrary/workflows/.github/actions/publish-s3@v1
+      - uses: caltechlibrary/workflows/.github/actions/publish-to-s3@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_ARN }}
           bucket: ${{ secrets.AWS_BUCKET_NAME }}
           distribution-id: ${{ secrets.AWS_DISTRIBUTION_ID }}
           prefix: cl-webcomponents
+          public-base-url: https://media.library.caltech.edu/cl-webcomponents/
           sources: |
             dist
             css
